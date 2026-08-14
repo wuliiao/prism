@@ -3,7 +3,7 @@ import type { Track } from '@entities/track'
 import { useAudioEngine } from '@entities/audio'
 import { usePlaylist } from '@features/manage-playlist'
 import { UploadTrackButton } from '@features/upload-track'
-import { IconMusic } from '@shared/ui/Icon'
+import { IconMusic, IconPlus } from '@shared/ui/Icon'
 import { useToast } from '@shared/ui/Toast'
 import { useKeyboardShortcuts } from '@shared/lib/useKeyboardShortcuts'
 import { AudioVisualizer } from '@widgets/audio-visualizer'
@@ -154,6 +154,27 @@ export function PlayerPage() {
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-violet-400" />
               </div>
+            ) : null}
+            {currentTrack && !isLoading ? (
+              isInPlaylist(currentTrack.id) ? (
+                <span
+                  className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/90 text-sm font-semibold text-white shadow-lg ring-2 ring-black/20"
+                  aria-label="In playlist"
+                  title="In playlist"
+                >
+                  ✓
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  aria-label={`Add ${currentTrack.title} to playlist`}
+                  title="Add to playlist"
+                  className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/90 text-white shadow-lg ring-2 ring-black/20 transition hover:bg-violet-400 active:scale-95"
+                  onClick={() => handleAddToPlaylist(currentTrack)}
+                >
+                  <IconPlus className="h-5 w-5" />
+                </button>
+              )
             ) : null}
           </div>
           <div className="w-full text-center lg:text-left">
