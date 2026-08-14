@@ -12,7 +12,7 @@ export function useJamendoTracks() {
     setError(null)
 
     try {
-      const results = await fetchJamendoTracks({ search: query || 'chill' })
+      const results = await fetchJamendoTracks({ search: query.trim() })
       setTracks(results)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load tracks')

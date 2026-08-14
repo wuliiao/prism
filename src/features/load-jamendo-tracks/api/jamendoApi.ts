@@ -11,7 +11,7 @@ export interface FetchJamendoTracksParams {
 }
 
 export async function fetchJamendoTracks({
-  search = 'electronic',
+  search = '',
   limit = 12,
 }: FetchJamendoTracksParams = {}): Promise<Track[]> {
   if (!env.jamendoClientId) {
@@ -22,10 +22,14 @@ export async function fetchJamendoTracks({
     client_id: env.jamendoClientId,
     format: 'json',
     limit: String(limit),
-    tags: search,
     audioformat: 'mp32',
     include: 'musicinfo',
   })
+
+  const query = search.trim()
+  if (query) {
+    params.set('search', query)
+  }
 
   const response = await fetch(`${JAMENDO_BASE}/tracks/?${params.toString()}`)
 

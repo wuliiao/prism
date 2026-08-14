@@ -19,7 +19,22 @@ describe('track mappers', () => {
       audioUrl: 'https://example.com/audio.mp3',
       coverUrl: 'https://example.com/image.jpg',
       source: 'jamendo',
+      genre: undefined,
     })
+  })
+
+  it('maps Jamendo genre from musicinfo tags', () => {
+    const track = mapJamendoTrack({
+      id: '7',
+      name: 'Night Drive',
+      artist_name: 'Neon',
+      duration: 200,
+      audio: 'https://example.com/night.mp3',
+      album_image: 'https://example.com/cover.jpg',
+      musicinfo: { tags: { genres: ['Electronic'] } },
+    })
+
+    expect(track.genre).toBe('electronic')
   })
 
   it('creates local track from uploaded file', () => {

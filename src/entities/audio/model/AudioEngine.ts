@@ -95,14 +95,6 @@ export class AudioEngine {
     this.audio.pause()
   }
 
-  toggle(): void {
-    if (this.audio.paused) {
-      void this.play()
-    } else {
-      this.pause()
-    }
-  }
-
   seek(seconds: number): void {
     this.audio.currentTime = seconds
   }

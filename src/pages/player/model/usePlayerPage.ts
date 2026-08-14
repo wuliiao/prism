@@ -1,0 +1,190 @@
+import { useCallback, useEffect, useRef } from 'react'
+import type { Track } from '@entities/track'
+import { useAudioEngine } from '@entities/audio'
+import { usePlaylist } from '@features/manage-playlist'
+import { useToast } from '@shared/ui/Toast'
+import { useKeyboardShortcuts } from '@shared/lib/useKeyboardShortcuts'
+
+export function usePlayerPage() {
+  const { loadTrack, currentTrack, isPlaying, isLoading, error, clearError, registerOnTrackEnded, toggle, seek, currentTime } =
+    useAudioEngine()
+  const { showToast } = useToast()
+  const {
+    tracks,
+    addTrack,
+    addAndSelect,
+    addTracks,
+    removeTrack,
+    selectTrack,
+    isInPlaylist,
+    playNext,
+    playPrevious,
+  } = usePlaylist({
+    onStorageError: () => showToast("Playlist couldn't be saved on this device", 'error'),
+  })
+
+  const isPlaylistPlaybackRef = useRef(true)
+  const queuedAfterRemoveRef = useRef<Track | null>(null)
+
+  const playTrack = useCallback(
+    async (track: Track) => {
+      isPlaylistPlaybackRef.current = true
+      selectTrack(track)
+      await loadTrack(track)
+    },
+    [loadTrack, selectTrack],
+  )
+
+  const previewTrack = useCallback(
+    async (track: Track) => {
+      isPlaylistPlaybackRef.current = isInPlaylist(track.id)
+      if (isInPlaylist(track.id)) {
+        selectTrack(track)
+      }
+      await loadTrack(track)
+    },
+    [isInPlaylist, loadTrack, selectTrack],
+  )
+
+  const handleAddToPlaylist = useCallback(
+    (track: Track) => {
+      const result = addTrack(track)
+      if (result === 'added') {
+        showToast(`Added: ${track.title}`, 'success')
+        if (currentTrack?.id === track.id) {
+          isPlaylistPlaybackRef.current = true
+          selectTrack(track)
+        }
+      } else {
+        showToast('Already in playlist', 'info')
+      }
+    },
+    [addTrack, currentTrack?.id, selectTrack, showToast],
+  )
+
+  const handleRemoveFromPlaylist = useCallback(
+    (track: Track) => {
+      if (!isInPlaylist(track.id)) return
+
+      removeTrack(track.id)
+      if (currentTrack?.id === track.id) {
+        isPlaylistPlaybackRef.current = false
+      }
+      showToast(`Removed: ${track.title}`, 'info')
+    },
+    [currentTrack?.id, isInPlaylist, removeTrack, showToast],
+  )
+
+  const handleAddAll = useCallback(
+    (newTracks: Track[]) => {
+      const addedCount = addTracks(newTracks)
+      if (addedCount > 0) {
+        showToast(`Added ${addedCount} track${addedCount === 1 ? '' : 's'} to playlist`, 'success')
+      } else {
+        showToast('All tracks are already in playlist', 'info')
+      }
+    },
+    [addTracks, showToast],
+  )
+
+  const handleUpload = useCallback(
+    async (track: Track) => {
+      addAndSelect(track)
+      isPlaylistPlaybackRef.current = true
+      await loadTrack(track)
+      showToast(`Uploaded: ${track.title}`, 'success')
+    },
+    [addAndSelect, loadTrack, showToast],
+  )
+
+  const handleUploadError = useCallback(
+    (message: string) => showToast(message, 'error'),
+    [showToast],
+  )
+
+  const handleRemoveTrack = useCallback(
+    (track: Track) => {
+      const isCurrentlyPlaying = currentTrack?.id === track.id
+
+      if (isCurrentlyPlaying) {
+        const index = tracks.findIndex((item) => item.id === track.id)
+        queuedAfterRemoveRef.current =
+          index >= 0 && index < tracks.length - 1 ? tracks[index + 1] ?? null : null
+        isPlaylistPlaybackRef.current = queuedAfterRemoveRef.current !== null
+        removeTrack(track.id, { keepPlaying: true })
+        return
+      }
+
+      removeTrack(track.id)
+    },
+    [currentTrack?.id, removeTrack, tracks],
+  )
+
+  const handleNext = useCallback(async () => {
+    isPlaylistPlaybackRef.current = true
+    const next = playNext()
+    if (next) await loadTrack(next)
+  }, [loadTrack, playNext])
+
+  const handlePrevious = useCallback(async () => {
+    isPlaylistPlaybackRef.current = true
+    const previous = playPrevious()
+    if (previous) await loadTrack(previous)
+  }, [loadTrack, playPrevious])
+
+  useEffect(() => {
+    return registerOnTrackEnded(() => {
+      void (async () => {
+        if (queuedAfterRemoveRef.current) {
+          const next = queuedAfterRemoveRef.current
+          queuedAfterRemoveRef.current = null
+          isPlaylistPlaybackRef.current = true
+          selectTrack(next)
+          await loadTrack(next)
+          return
+        }
+
+        if (!isPlaylistPlaybackRef.current) return
+
+        const next = playNext()
+        if (next) await loadTrack(next)
+      })()
+    })
+  }, [loadTrack, playNext, registerOnTrackEnded, selectTrack])
+
+  useEffect(() => {
+    if (error) {
+      showToast(error, 'error')
+      clearError()
+    }
+  }, [clearError, error, showToast])
+
+  useKeyboardShortcuts({
+    onTogglePlay: () => void toggle(),
+    onSeekBackward: () => seek(Math.max(0, currentTime - 5)),
+    onSeekForward: () => seek(currentTime + 5),
+    enabled: Boolean(currentTrack),
+  })
+
+  const isPreviewMode = Boolean(currentTrack && !isInPlaylist(currentTrack.id))
+
+  return {
+    currentTrack,
+    isPlaying,
+    isLoading,
+    tracks,
+    isInPlaylist,
+    canNavigate: tracks.length > 0 && !isPreviewMode,
+    coverInPlaylist: Boolean(currentTrack && isInPlaylist(currentTrack.id)),
+    playTrack,
+    previewTrack,
+    handleAddToPlaylist,
+    handleRemoveFromPlaylist,
+    handleAddAll,
+    handleUpload,
+    handleUploadError,
+    handleRemoveTrack,
+    handleNext,
+    handlePrevious,
+  }
+}
