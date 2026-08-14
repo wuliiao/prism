@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Track } from '@entities/track'
 
 const STORAGE_KEY = 'prism-playlist'
@@ -20,22 +20,35 @@ export type AddTrackResult = 'added' | 'exists'
 
 interface UsePlaylistOptions {
   onStorageError?: () => void
+  onDroppedLocalTracks?: () => void
 }
 
-function readStoredPlaylist(): Track[] {
+function canRestoreTrack(track: Track): boolean {
+  return track.source !== 'local' && !track.audioUrl.startsWith('blob:')
+}
+
+function readStoredPlaylist(): { tracks: Track[]; droppedLocal: boolean } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    return JSON.parse(raw) as Track[]
+    if (!raw) return { tracks: [], droppedLocal: false }
+
+    const parsed = JSON.parse(raw) as Track[]
+    if (!Array.isArray(parsed)) return { tracks: [], droppedLocal: false }
+
+    const tracks = parsed.filter(canRestoreTrack)
+    return { tracks, droppedLocal: tracks.length !== parsed.length }
   } catch {
-    return []
+    return { tracks: [], droppedLocal: false }
   }
 }
 
 export function usePlaylist(options?: UsePlaylistOptions) {
   const onStorageError = options?.onStorageError
-  const [tracks, setTracks] = useState<Track[]>(() => readStoredPlaylist())
-  const [currentIndex, setCurrentIndex] = useState(() => readStoredIndex(readStoredPlaylist()))
+  const onDroppedLocalTracks = options?.onDroppedLocalTracks
+  const restoredRef = useRef(readStoredPlaylist())
+  const notifiedDropRef = useRef(false)
+  const [tracks, setTracks] = useState<Track[]>(() => restoredRef.current.tracks)
+  const [currentIndex, setCurrentIndex] = useState(() => readStoredIndex(restoredRef.current.tracks))
 
   useEffect(() => {
     try {
@@ -52,6 +65,13 @@ export function usePlaylist(options?: UsePlaylistOptions) {
       onStorageError?.()
     }
   }, [onStorageError])
+
+  useEffect(() => {
+    if (!restoredRef.current.droppedLocal || notifiedDropRef.current) return
+    notifiedDropRef.current = true
+    persist(restoredRef.current.tracks)
+    onDroppedLocalTracks?.()
+  }, [onDroppedLocalTracks, persist])
 
   const addTrack = useCallback((track: Track): AddTrackResult => {
     let result: AddTrackResult = 'exists'
