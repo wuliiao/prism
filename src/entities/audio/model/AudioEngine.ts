@@ -64,7 +64,11 @@ export class AudioEngine {
     if (context.state === 'suspended') {
       await context.resume()
     }
-    await this.audio.play()
+    try {
+      await this.audio.play()
+    } catch (error) {
+      throw error instanceof Error ? error : new Error('Playback failed')
+    }
   }
 
   pause(): void {
