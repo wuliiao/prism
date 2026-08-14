@@ -1,5 +1,3 @@
-import type { Track } from '@entities/track'
-
 export class AudioEngine {
   private audio: HTMLAudioElement
   private context: AudioContext | null = null
@@ -71,10 +69,10 @@ export class AudioEngine {
     })
   }
 
-  async loadTrack(track: Track): Promise<void> {
+  async load(audioUrl: string): Promise<void> {
     this.pause()
     this.ensureSourceConnected()
-    this.audio.src = track.audioUrl
+    this.audio.src = audioUrl
     this.audio.load()
     await this.waitForCanPlay()
   }

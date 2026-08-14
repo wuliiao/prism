@@ -1,4 +1,4 @@
-import { formatTime } from '@shared/lib/formatTime'
+import { formatTime } from '@shared/lib'
 import { IconCheck, IconClose, IconMusic, IconPlay, IconPlus } from '@shared/ui/Icon'
 import type { Track } from '../model/types'
 

@@ -1,6 +1,6 @@
 import { fetchJamendoTracks } from '../jamendoApi'
 
-jest.mock('@shared/config/env', () => ({
+jest.mock('@shared/config', () => ({
   env: { jamendoClientId: 'test-client' },
 }))
 

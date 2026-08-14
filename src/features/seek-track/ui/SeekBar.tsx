@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAudioEngine } from '@entities/audio'
-import { formatTime } from '@shared/lib/formatTime'
+import { formatTime } from '@shared/lib'
 import { Slider } from '@shared/ui/Slider'
 
 export function SeekBar() {
