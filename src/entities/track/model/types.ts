@@ -26,6 +26,6 @@ export interface JamendoTrackResponse {
 }
 
 export interface JamendoApiResponse {
-  headers: { status: string; code: number }
+  headers: { status: string; code: number; error_message?: string }
   results: JamendoTrackResponse[]
 }
