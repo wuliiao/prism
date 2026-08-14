@@ -15,8 +15,6 @@ interface TrackSearchPanelProps {
   isPlaying: boolean
 }
 
-const GENRE_TAGS = ['chill', 'jazz', 'electronic', 'ambient', 'rock', 'lofi', 'pop']
-
 export function TrackSearchPanel({
   onPreviewTrack,
   onAddTrack,
@@ -40,10 +38,10 @@ export function TrackSearchPanel({
     void search(query)
   }
 
-  const handleTagClick = (tag: string) => {
-    setQuery(tag)
-    void search(tag)
-  }
+  const activeGenre = query.trim().toLowerCase()
+
+  const withGenre = (track: Track): Track =>
+    activeGenre ? { ...track, genre: activeGenre } : track
 
   if (!isJamendoConfigured()) {
     return (
@@ -86,23 +84,6 @@ export function TrackSearchPanel({
             )}
           </Button>
         </form>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {GENRE_TAGS.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => handleTagClick(tag)}
-              className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition ${
-                query === tag
-                  ? 'bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/40'
-                  : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200'
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
       </header>
 
       {error ? (
@@ -111,7 +92,7 @@ export function TrackSearchPanel({
 
       {tracks.length > 0 ? (
         <div className="mb-3">
-          <Button variant="ghost" className="w-full text-xs" disabled={isLoading} onClick={() => onAddAll(tracks)}>
+          <Button variant="ghost" className="w-full text-xs" disabled={isLoading} onClick={() => onAddAll(tracks.map(withGenre))}>
             Add all {tracks.length} tracks to playlist
           </Button>
         </div>
@@ -137,8 +118,8 @@ export function TrackSearchPanel({
           <li key={track.id}>
             <TrackItem
               track={track}
-              onPlay={onPreviewTrack}
-              onAdd={onAddTrack}
+              onPlay={(item) => onPreviewTrack(withGenre(item))}
+              onAdd={(item) => onAddTrack(withGenre(item))}
               onRemoveFromPlaylist={onRemoveFromPlaylist}
               actionLabel="Add"
               isInPlaylist={isInPlaylist(track.id)}
