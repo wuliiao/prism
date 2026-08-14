@@ -138,4 +138,4 @@ pnpm storybook
 pnpm test
 ```
 
-Tests cover time formatting, track mappers, playlist hook, `SeekBar`, `TrackItem`, playback storage, Jamendo search, and `AudioEngine`.
+Tests cover time formatting, track mappers, playlist hook, `SeekBar`, `TrackItem`, playback storage, Jamendo search, `AudioEngine`, `loadTrack`, and restoring the current track after refresh.
