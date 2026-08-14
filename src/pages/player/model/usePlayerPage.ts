@@ -6,7 +6,7 @@ import { useToast } from '@shared/ui/Toast'
 import { useKeyboardShortcuts } from '@shared/lib'
 
 export function usePlayerPage() {
-  const { loadTrack, currentTrack, isPlaying, isLoading, error, clearError, registerOnTrackEnded, toggle, seek, currentTime } =
+  const { loadTrack, currentTrack, isPlaying, isLoading, error, clearError, registerOnTrackEnded, toggle, seek, currentTime, duration } =
     useAudioEngine()
   const { showToast } = useToast()
   const {
@@ -16,6 +16,7 @@ export function usePlayerPage() {
     addTracks,
     removeTrack,
     selectTrack,
+    updateTrackDuration,
     isInPlaylist,
     playNext,
     playPrevious,
@@ -166,6 +167,12 @@ export function usePlayerPage() {
       selectTrack(currentTrack)
     }
   }, [currentTrack, isInPlaylist, selectTrack])
+
+  useEffect(() => {
+    if (!currentTrack || currentTrack.source !== 'local') return
+    if (!Number.isFinite(duration) || duration <= 0) return
+    updateTrackDuration(currentTrack.id, duration)
+  }, [currentTrack, duration, updateTrackDuration])
 
   useKeyboardShortcuts({
     onTogglePlay: () => void toggle(),

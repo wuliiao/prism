@@ -91,6 +91,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
   const animationRef = useRef<number | null>(null)
   const phaseRef = useRef(0)
   const energyRef = useRef(0)
+  const lastLiveWaveformRef = useRef<Uint8Array | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -110,12 +111,21 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
 
       const centerY = canvasHeight / 2
       const hasLiveAudio = Boolean(analyser && isPlaying)
+      const frozenWaveform = lastLiveWaveformRef.current
+      const hasFrozenWave = Boolean(currentTrack && frozenWaveform && frozenWaveform.length > 0)
 
       if (hasLiveAudio) {
         analyser!.getByteTimeDomainData(waveform)
         analyser!.getByteFrequencyData(spectrum)
+        if (!lastLiveWaveformRef.current || lastLiveWaveformRef.current.length !== waveform.length) {
+          lastLiveWaveformRef.current = new Uint8Array(waveform.length)
+        }
+        lastLiveWaveformRef.current.set(waveform)
         energyRef.current += (averageEnergy(spectrum) - energyRef.current) * 0.35
+      } else if (hasFrozenWave) {
+        energyRef.current += (0.08 - energyRef.current) * 0.18
       } else {
+        lastLiveWaveformRef.current = null
         energyRef.current += (0.12 - energyRef.current) * 0.12
         if (animateIdle) phaseRef.current += 0.04
         for (let index = 0; index < idleWave.length; index += 1) {
@@ -125,7 +135,8 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
       }
 
       const energy = energyRef.current
-      const amplitude = canvasHeight * (hasLiveAudio ? 0.32 + energy * 0.12 : 0.22)
+      const showLiveWave = hasLiveAudio || hasFrozenWave
+      const amplitude = canvasHeight * (showLiveWave ? 0.32 + energy * 0.12 : 0.22)
 
       context.setTransform(1, 0, 0, 1, 0, 0)
       context.clearRect(0, 0, canvas.width, canvas.height)
@@ -150,17 +161,20 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
       context.lineCap = 'round'
       context.lineJoin = 'round'
 
-      if (hasLiveAudio) {
-        context.strokeStyle = 'rgba(212, 175, 95, 0.28)'
+      if (showLiveWave) {
+        const liveSamples = hasLiveAudio ? waveform : frozenWaveform!
+        context.strokeStyle = `rgba(212, 175, 95, ${hasLiveAudio ? 0.28 : 0.16})`
         context.lineWidth = 1
-        buildWavePath(context, waveform, width, centerY + 6, amplitude * 0.55, true)
+        buildWavePath(context, liveSamples, width, centerY + 6, amplitude * 0.55, true)
         context.stroke()
       }
 
-      context.strokeStyle = hasLiveAudio ? `rgba(56, 189, 248, ${0.55 + energy * 0.35})` : 'rgba(56, 189, 248, 0.35)'
-      context.lineWidth = hasLiveAudio ? 2 : 1.25
-      if (hasLiveAudio) {
-        buildWavePath(context, waveform, width, centerY, amplitude, true)
+      context.strokeStyle = showLiveWave
+        ? `rgba(56, 189, 248, ${hasLiveAudio ? 0.55 + energy * 0.35 : 0.38})`
+        : 'rgba(56, 189, 248, 0.35)'
+      context.lineWidth = showLiveWave ? 2 : 1.25
+      if (showLiveWave) {
+        buildWavePath(context, hasLiveAudio ? waveform : frozenWaveform!, width, centerY, amplitude, true)
       } else {
         buildWavePath(context, idleWave, width, centerY, amplitude, false)
       }
@@ -168,8 +182,9 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
     }
 
     const draw = () => {
-      drawFrame(!mediaQuery.matches)
-      if (!mediaQuery.matches) {
+      const keepAnimating = !mediaQuery.matches && (Boolean(analyser && isPlaying) || !currentTrack)
+      drawFrame(keepAnimating)
+      if (keepAnimating) {
         animationRef.current = requestAnimationFrame(draw)
       }
     }
@@ -191,7 +206,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [analyser, isPlaying])
+  }, [analyser, currentTrack, isPlaying])
 
   useEffect(() => {
     const canvas = canvasRef.current

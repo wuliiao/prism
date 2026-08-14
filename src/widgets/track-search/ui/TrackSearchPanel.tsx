@@ -115,7 +115,7 @@ export function TrackSearchPanel({
             ))
           : null}
 
-        {!isLoading && tracks.length === 0 ? (
+        {!isLoading && !error && tracks.length === 0 ? (
           <li className="flex flex-1 items-center justify-center py-12 font-mono text-xs text-sky-400/50">
             No results — try another query
           </li>

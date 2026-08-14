@@ -125,6 +125,21 @@ export function usePlaylist(options?: UsePlaylistOptions) {
     return result
   }, [persist])
 
+  const updateTrackDuration = useCallback((trackId: string, duration: number) => {
+    if (!Number.isFinite(duration) || duration <= 0) return
+
+    setTracks((prev) => {
+      const index = prev.findIndex((track) => track.id === trackId)
+      if (index < 0) return prev
+      const current = prev[index]
+      if (!current || current.duration === duration) return prev
+      const next = [...prev]
+      next[index] = { ...current, duration }
+      persist(next)
+      return next
+    })
+  }, [persist])
+
   const isInPlaylist = useCallback(
     (trackId: string) => tracks.some((track) => track.id === trackId),
     [tracks],
@@ -155,6 +170,7 @@ export function usePlaylist(options?: UsePlaylistOptions) {
     removeTrack,
     selectTrack,
     addAndSelect,
+    updateTrackDuration,
     isInPlaylist,
     playNext,
     playPrevious,

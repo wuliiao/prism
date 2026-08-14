@@ -59,7 +59,7 @@ export function PlayerPage() {
             {currentTrack?.coverUrl ? (
               <img
                 src={currentTrack.coverUrl}
-                alt={currentTrack.title}
+                alt={`Cover for ${currentTrack.title} by ${currentTrack.artist}`}
                 className={`h-full w-full rounded-lg border border-sky-400/25 object-cover shadow-[0_8px_40px_rgb(0_0_0/50%),0_0_40px_rgb(56_189_248/8%)] transition motion-reduce:transform-none ${
                   isPlaying ? 'scale-[1.02]' : ''
                 } ${isLoading ? 'opacity-60' : ''}`}
