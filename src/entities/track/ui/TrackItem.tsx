@@ -9,6 +9,7 @@ interface TrackItemProps {
   onSelect?: (track: Track) => void
   onPlay?: (track: Track) => void
   onAdd?: (track: Track) => void
+  onRemoveFromPlaylist?: (track: Track) => void
   onRemove?: (track: Track) => void
   actionLabel?: string
   isInPlaylist?: boolean
@@ -78,6 +79,7 @@ export function TrackItem({
   onSelect,
   onPlay,
   onAdd,
+  onRemoveFromPlaylist,
   onRemove,
   actionLabel,
   isInPlaylist = false,
@@ -120,9 +122,15 @@ export function TrackItem({
 
       {actionLabel ? (
         isInPlaylist ? (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-xs font-medium text-emerald-300">
+          <button
+            type="button"
+            aria-label={`Remove ${track.title} from playlist`}
+            title="Remove from playlist"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/25"
+            onClick={() => onRemoveFromPlaylist?.(track)}
+          >
             ✓
-          </span>
+          </button>
         ) : (
           <button
             type="button"
