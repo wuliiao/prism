@@ -19,19 +19,17 @@ export function AudioVisualizer({ barCount = 72, height = 200 }: AudioVisualizer
     const context = canvas.getContext('2d')
     if (!context) return
 
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const bufferLength = analyser?.frequencyBinCount ?? barCount
     const dataArray = new Uint8Array(bufferLength)
 
-    const draw = () => {
-      animationRef.current = requestAnimationFrame(draw)
-
+    const drawFrame = (animateIdle: boolean) => {
       const width = canvas.width
       const canvasHeight = canvas.height
       const centerY = canvasHeight / 2
 
       context.clearRect(0, 0, width, canvasHeight)
 
-      // subtle background glow
       const bgGlow = context.createRadialGradient(
         width / 2,
         centerY,
@@ -47,11 +45,14 @@ export function AudioVisualizer({ barCount = 72, height = 200 }: AudioVisualizer
 
       if (analyser && isPlaying) {
         analyser.getByteFrequencyData(dataArray)
-        phaseRef.current = 0
-      } else {
+      } else if (animateIdle) {
         phaseRef.current += 0.04
         for (let i = 0; i < bufferLength; i += 1) {
           dataArray[i] = Math.sin(phaseRef.current + i * 0.15) * 18 + 22
+        }
+      } else {
+        for (let i = 0; i < bufferLength; i += 1) {
+          dataArray[i] = 28
         }
       }
 
@@ -63,7 +64,6 @@ export function AudioVisualizer({ barCount = 72, height = 200 }: AudioVisualizer
         const value = dataArray[i * step] ?? 0
         const normalized = value / 255
         const barHeight = normalized * (canvasHeight * 0.42)
-
         const x = i * (barWidth + gap)
 
         const gradient = context.createLinearGradient(0, centerY - barHeight, 0, centerY + barHeight)
@@ -72,13 +72,10 @@ export function AudioVisualizer({ barCount = 72, height = 200 }: AudioVisualizer
         gradient.addColorStop(1, '#6d28d9')
 
         context.fillStyle = gradient
-
-        // top bar
         context.beginPath()
         context.roundRect(x, centerY - barHeight, barWidth, barHeight, 2)
         context.fill()
 
-        // mirrored bottom bar
         context.globalAlpha = 0.55
         context.beginPath()
         context.roundRect(x, centerY, barWidth, barHeight * 0.85, 2)
@@ -87,9 +84,27 @@ export function AudioVisualizer({ barCount = 72, height = 200 }: AudioVisualizer
       }
     }
 
+    const draw = () => {
+      drawFrame(!mediaQuery.matches)
+      if (!mediaQuery.matches) {
+        animationRef.current = requestAnimationFrame(draw)
+      }
+    }
+
     draw()
 
+    const handleMotionChange = () => {
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current)
+        animationRef.current = null
+      }
+      draw()
+    }
+
+    mediaQuery.addEventListener('change', handleMotionChange)
+
     return () => {
+      mediaQuery.removeEventListener('change', handleMotionChange)
       if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current)
       }

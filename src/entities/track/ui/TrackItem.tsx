@@ -40,7 +40,7 @@ function TrackCover({
       {track.coverUrl ? (
         <img
           src={track.coverUrl}
-          alt=""
+          alt={track.title}
           className="h-11 w-11 rounded-lg object-cover shadow-md ring-1 ring-white/10"
         />
       ) : (

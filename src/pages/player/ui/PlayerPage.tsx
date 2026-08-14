@@ -188,8 +188,8 @@ export function PlayerPage() {
             {currentTrack?.coverUrl ? (
               <img
                 src={currentTrack.coverUrl}
-                alt=""
-                className={`h-full w-full rounded-2xl object-cover shadow-2xl shadow-black/50 ring-1 ring-white/10 transition ${
+                alt={currentTrack.title}
+                className={`h-full w-full rounded-2xl object-cover shadow-2xl shadow-black/50 ring-1 ring-white/10 transition motion-reduce:transform-none ${
                   isPlaying ? 'scale-[1.02]' : ''
                 } ${isLoading ? 'opacity-60' : ''}`}
               />
