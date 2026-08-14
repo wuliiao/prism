@@ -21,7 +21,7 @@ function averageEnergy(spectrum: Uint8Array) {
 
 function waveValue(raw: number, isByteData: boolean) {
   const value = isByteData ? (raw - 128) / 128 : raw
-  return Math.tanh(value * 1.2) * 0.7
+  return Math.tanh(value * 0.9) * 0.55
 }
 
 function drawHudFrame(context: CanvasRenderingContext2D, width: number, height: number) {
@@ -77,7 +77,7 @@ function buildWavePath(
 ) {
   context.beginPath()
   const last = samples.length - 1
-  const step = Math.max(1, Math.floor(samples.length / 160))
+  const step = Math.max(1, Math.floor(samples.length / 72))
 
   for (let index = 0; index <= last; index += step) {
     const progress = last === 0 ? 0 : index / last
@@ -102,7 +102,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
   const animationRef = useRef<number | null>(null)
   const phaseRef = useRef(0)
   const energyRef = useRef(0)
-  const lastLiveWaveformRef = useRef<Uint8Array | null>(null)
+  const lastLiveWaveformRef = useRef<Float32Array | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -115,6 +115,12 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
     const waveform = new Uint8Array(analyser?.fftSize ?? 256)
     const spectrum = new Uint8Array(analyser?.frequencyBinCount ?? 128)
     const idleWave = new Float32Array(waveform.length)
+    const smoothedWave = new Float32Array(waveform.length)
+    if (lastLiveWaveformRef.current && lastLiveWaveformRef.current.length === smoothedWave.length) {
+      smoothedWave.set(lastLiveWaveformRef.current)
+    } else {
+      smoothedWave.fill(128)
+    }
 
     const drawFrame = (animateIdle: boolean) => {
       const { width, height: canvasHeight, dpr } = sizeRef.current
@@ -128,17 +134,23 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
       if (hasLiveAudio) {
         analyser!.getByteTimeDomainData(waveform)
         analyser!.getByteFrequencyData(spectrum)
-        if (!lastLiveWaveformRef.current || lastLiveWaveformRef.current.length !== waveform.length) {
-          lastLiveWaveformRef.current = new Uint8Array(waveform.length)
+        const follow = 0.05
+        for (let index = 0; index < waveform.length; index += 1) {
+          const previous = smoothedWave[index] ?? 128
+          const next = waveform[index] ?? 128
+          smoothedWave[index] = previous + (next - previous) * follow
         }
-        lastLiveWaveformRef.current.set(waveform)
-        energyRef.current += (averageEnergy(spectrum) - energyRef.current) * 0.16
+        if (!lastLiveWaveformRef.current || lastLiveWaveformRef.current.length !== smoothedWave.length) {
+          lastLiveWaveformRef.current = new Float32Array(smoothedWave.length)
+        }
+        lastLiveWaveformRef.current.set(smoothedWave)
+        energyRef.current += (averageEnergy(spectrum) - energyRef.current) * 0.08
       } else if (hasFrozenWave) {
-        energyRef.current += (0.08 - energyRef.current) * 0.18
+        energyRef.current += (0.08 - energyRef.current) * 0.12
       } else {
         lastLiveWaveformRef.current = null
-        energyRef.current += (0.12 - energyRef.current) * 0.12
-        if (animateIdle) phaseRef.current += 0.04
+        energyRef.current += (0.12 - energyRef.current) * 0.08
+        if (animateIdle) phaseRef.current += 0.018
         for (let index = 0; index < idleWave.length; index += 1) {
           const progress = index / (idleWave.length - 1)
           idleWave[index] = Math.sin(progress * Math.PI * 2.4 + phaseRef.current) * 0.22
@@ -147,7 +159,8 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
 
       const energy = energyRef.current
       const showLiveWave = hasLiveAudio || hasFrozenWave
-      const amplitude = canvasHeight * (showLiveWave ? 0.2 + energy * 0.08 : 0.22)
+      const amplitude = canvasHeight * (showLiveWave ? 0.16 + energy * 0.05 : 0.22)
+      const liveSamples = hasLiveAudio ? smoothedWave : frozenWaveform
 
       context.setTransform(1, 0, 0, 1, 0, 0)
       context.clearRect(0, 0, canvas.width, canvas.height)
@@ -172,8 +185,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
       context.lineCap = 'round'
       context.lineJoin = 'round'
 
-      if (showLiveWave) {
-        const liveSamples = hasLiveAudio ? waveform : frozenWaveform!
+      if (showLiveWave && liveSamples) {
         context.strokeStyle = `rgba(212, 175, 95, ${hasLiveAudio ? 0.28 : 0.16})`
         context.lineWidth = 1
         buildWavePath(context, liveSamples, width, centerY + 6, amplitude * 0.55, true)
@@ -184,8 +196,8 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
         ? `rgba(56, 189, 248, ${hasLiveAudio ? 0.55 + energy * 0.35 : 0.38})`
         : 'rgba(56, 189, 248, 0.35)'
       context.lineWidth = showLiveWave ? 2 : 1.25
-      if (showLiveWave) {
-        buildWavePath(context, hasLiveAudio ? waveform : frozenWaveform!, width, centerY, amplitude, true)
+      if (showLiveWave && liveSamples) {
+        buildWavePath(context, liveSamples, width, centerY, amplitude, true)
       } else {
         buildWavePath(context, idleWave, width, centerY, amplitude, false)
       }
