@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react'
 import type { Track } from '@entities/track'
 
-const STORAGE_KEY = 'harmony-hub-playlist'
+const STORAGE_KEY = 'prism-playlist'
+const LEGACY_STORAGE_KEY = 'harmony-hub-playlist'
 
 export type AddTrackResult = 'added' | 'exists'
 
@@ -11,7 +12,8 @@ interface UsePlaylistOptions {
 
 function readStoredPlaylist(): Track[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw =
+      localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY)
     if (!raw) return []
     return JSON.parse(raw) as Track[]
   } catch {

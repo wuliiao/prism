@@ -15,6 +15,9 @@ interface TrackSearchPanelProps {
   isPlaying: boolean
 }
 
+const inputClassName =
+  'flex-1 rounded-md border border-sky-400/20 bg-sky-950/40 px-4 py-2.5 font-mono text-sm text-sky-50 outline-none transition placeholder:text-sky-400/35 focus:border-sky-400/50 focus:bg-sky-950/60 focus:ring-2 focus:ring-sky-400/15'
+
 export function TrackSearchPanel({
   onPreviewTrack,
   onAddTrack,
@@ -45,18 +48,22 @@ export function TrackSearchPanel({
 
   if (!isJamendoConfigured()) {
     return (
-      <section className="glass-panel flex h-full min-h-[420px] flex-col rounded-2xl p-5">
+      <section className="glass-panel flex h-full min-h-[420px] flex-col rounded-lg p-5">
         <header className="mb-4">
-          <h2 className="text-base font-semibold text-zinc-100">Discover</h2>
-          <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-            Jamendo search is unavailable. Upload a local file or add{' '}
-            <code className="rounded bg-white/5 px-1 py-0.5 text-zinc-400">VITE_JAMENDO_CLIENT_ID</code> to{' '}
-            <code className="rounded bg-white/5 px-1 py-0.5 text-zinc-400">.env</code>.
+          <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-sky-100">
+            Search
+          </h2>
+          <p className="mt-1 font-mono text-[10px] leading-relaxed text-sky-400/50">
+            Jamendo uplink offline. Set{' '}
+            <code className="rounded border border-sky-400/15 bg-sky-950/50 px-1 py-0.5 text-sky-300/70">
+              VITE_JAMENDO_CLIENT_ID
+            </code>{' '}
+            in env config.
           </p>
         </header>
-        <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-8 text-center">
-          <p className="max-w-xs text-sm text-zinc-500">
-            Use the Upload button above to play your own music while API access is not configured.
+        <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-sky-400/15 bg-sky-950/20 px-4 py-8 text-center">
+          <p className="max-w-xs font-mono text-xs text-sky-400/50">
+            Use Import Local File to load audio while uplink is unavailable
           </p>
         </div>
       </section>
@@ -64,36 +71,44 @@ export function TrackSearchPanel({
   }
 
   return (
-    <section className="glass-panel flex h-full min-h-[420px] flex-col rounded-2xl p-5">
+    <section className="glass-panel flex h-full min-h-[420px] flex-col rounded-lg p-5">
       <header className="mb-4">
-        <h2 className="text-base font-semibold text-zinc-100">Discover</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">Hover and play to preview, then add to playlist</p>
+        <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-sky-100">
+          Search
+        </h2>
 
-        <form className="mt-4 flex gap-2" onSubmit={handleSubmit}>
+        <form className="mt-3 flex gap-2" onSubmit={handleSubmit}>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by mood or genre..."
-            className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-violet-400/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-violet-400/20"
+            placeholder="Search genre / mood..."
+            className={inputClassName}
           />
           <Button type="submit" disabled={isLoading} className="min-w-[88px]">
             {isLoading ? (
-              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-sky-900 border-t-sky-200" />
             ) : (
-              'Search'
+              'Scan'
             )}
           </Button>
         </form>
       </header>
 
       {error ? (
-        <p className="mb-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{error}</p>
+        <p className="mb-3 rounded-md border border-rose-400/25 bg-rose-500/10 px-3 py-2 font-mono text-xs text-rose-200">
+          {error}
+        </p>
       ) : null}
 
       {tracks.length > 0 ? (
         <div className="mb-3">
-          <Button variant="ghost" className="w-full text-xs" disabled={isLoading} onClick={() => onAddAll(tracks.map(withGenre))}>
-            Add all {tracks.length} tracks to playlist
+          <Button
+            variant="ghost"
+            className="w-full normal-case tracking-normal"
+            disabled={isLoading}
+            onClick={() => onAddAll(tracks.map(withGenre))}
+          >
+            Import all {tracks.length} tracks
           </Button>
         </div>
       ) : null}
@@ -101,16 +116,13 @@ export function TrackSearchPanel({
       <ul className="custom-scrollbar flex flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
         {isLoading && tracks.length === 0
           ? Array.from({ length: 5 }).map((_, index) => (
-              <li
-                key={index}
-                className="h-[58px] animate-pulse rounded-xl bg-white/[0.04]"
-              />
+              <li key={index} className="h-[58px] animate-pulse rounded-lg border border-sky-400/5 bg-sky-950/30" />
             ))
           : null}
 
         {!isLoading && tracks.length === 0 ? (
-          <li className="flex flex-1 items-center justify-center py-12 text-sm text-zinc-500">
-            No tracks found — try another tag
+          <li className="flex flex-1 items-center justify-center py-12 font-mono text-xs text-sky-400/50">
+            No results — try another query
           </li>
         ) : null}
 

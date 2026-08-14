@@ -1,6 +1,6 @@
-# Harmony Hub
+# PRISM
 
-Music player with a real-time audio visualizer built with React, Web Audio API, Tailwind CSS, and the [Jamendo API](https://developer.jamendo.com/v3.0).
+**P**ersonal **R**eactive **I**nteractive **S**ound **M**atrix — a Stark Industries–style music player with a real-time audio visualizer, built with React, Web Audio API, Tailwind CSS, and the [Jamendo API](https://developer.jamendo.com/v3.0).
 
 ## Features
 

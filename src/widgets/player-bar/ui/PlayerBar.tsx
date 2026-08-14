@@ -28,8 +28,15 @@ export function PlayerBar({ canNavigate, onNext, onPrevious }: PlayerBarProps) {
   )
 
   return (
-    <footer className="glass-panel-strong fixed inset-x-0 bottom-0 z-50 border-t border-white/10 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <footer className="glass-panel-strong fixed inset-x-0 bottom-0 z-50 border-t border-sky-400/20 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-6xl px-4 py-3">
+        <div className="mb-1 hidden items-center justify-between sm:flex">
+          <span className="hud-label">Playback control</span>
+          <span className="font-mono text-[9px] uppercase tracking-widest text-[#d4af5f]/60">
+            PRISM // Audio
+          </span>
+        </div>
+
         <div className="mb-2 hidden sm:block">
           <SeekBar />
         </div>
@@ -40,19 +47,19 @@ export function PlayerBar({ canNavigate, onNext, onPrevious }: PlayerBarProps) {
               <img
                 src={currentTrack.coverUrl}
                 alt={currentTrack.title}
-                className="h-10 w-10 shrink-0 rounded-lg object-cover shadow-lg ring-1 ring-white/10 sm:h-12 sm:w-12"
+                className="h-10 w-10 shrink-0 rounded-md border border-sky-400/20 object-cover sm:h-12 sm:w-12"
               />
             ) : (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-500/20 text-violet-300 ring-1 ring-white/10 sm:h-12 sm:w-12">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-sky-400/20 bg-sky-500/10 text-sky-300 sm:h-12 sm:w-12">
                 <IconMusic className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             )}
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-zinc-100">
-                {currentTrack?.title ?? 'No track selected'}
+              <p className="truncate text-sm font-medium text-sky-50">
+                {currentTrack?.title ?? 'No signal'}
               </p>
-              <p className="hidden truncate text-xs text-zinc-400 sm:block">
-                {currentTrack?.artist ?? 'Pick something from Discover or your playlist'}
+              <p className="hidden truncate font-mono text-[10px] text-sky-400/50 sm:block">
+                {currentTrack?.artist ?? 'Awaiting track selection'}
               </p>
             </div>
           </div>
@@ -68,7 +75,7 @@ export function PlayerBar({ canNavigate, onNext, onPrevious }: PlayerBarProps) {
           </div>
 
           <div className="hidden min-w-0 flex-1 items-center justify-end gap-2 md:flex">
-            <IconVolume className="h-4 w-4 shrink-0 text-zinc-400" />
+            <IconVolume className="h-4 w-4 shrink-0 text-sky-400/50" />
             {volumeSlider}
           </div>
         </div>
@@ -76,7 +83,7 @@ export function PlayerBar({ canNavigate, onNext, onPrevious }: PlayerBarProps) {
         <div className="mt-2 space-y-2 sm:hidden">
           <SeekBar />
           <div className="flex items-center gap-2">
-            <IconVolume className="h-4 w-4 shrink-0 text-zinc-400" />
+            <IconVolume className="h-4 w-4 shrink-0 text-sky-400/50" />
             {volumeSlider}
           </div>
         </div>

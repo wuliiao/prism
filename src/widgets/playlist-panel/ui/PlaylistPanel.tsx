@@ -52,20 +52,22 @@ export function PlaylistPanel({
   const showFilters = tracks.length > 0 && (availableGenres.length > 0 || hasLocalTracks)
 
   return (
-    <section className="glass-panel flex h-full min-h-[420px] flex-col rounded-2xl p-5">
+    <section className="glass-panel flex h-full min-h-[420px] flex-col rounded-lg p-5">
       <header className="mb-4 flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-zinc-100">Your playlist</h2>
-          <p className="mt-0.5 text-xs text-zinc-500">
+          <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-sky-100">
+            Playlist
+          </h2>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-sky-400/50">
             {tracks.length === 0
-              ? 'Empty for now'
+              ? 'Queue empty'
               : activeGenre
-                ? `${visibleTracks.length} of ${tracks.length} track${tracks.length === 1 ? '' : 's'}`
-                : `${tracks.length} track${tracks.length === 1 ? '' : 's'}`}
+                ? `${visibleTracks.length} / ${tracks.length} tracks`
+                : `${tracks.length} tracks loaded`}
           </p>
         </div>
         {tracks.length > 0 ? (
-          <span className="rounded-full bg-violet-500/15 px-2.5 py-1 text-xs font-medium text-violet-300">
+          <span className="rounded border border-sky-400/25 bg-sky-500/10 px-2.5 py-1 font-mono text-xs text-sky-300">
             {tracks.length}
           </span>
         ) : null}
@@ -73,18 +75,12 @@ export function PlaylistPanel({
 
       {showFilters ? (
         <div className="mb-4">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-            Filter by mood
-          </p>
+          <p className="hud-label mb-2">Filter // Mood</p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setActiveGenre(null)}
-              className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition ${
-                activeGenre === null
-                  ? 'bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/40'
-                  : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200'
-              }`}
+              className={`hud-chip capitalize ${activeGenre === null ? 'hud-chip-active' : ''}`}
             >
               All
             </button>
@@ -93,11 +89,7 @@ export function PlaylistPanel({
                 key={genre}
                 type="button"
                 onClick={() => setActiveGenre(genre)}
-                className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition ${
-                  activeGenre === genre
-                    ? 'bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/40'
-                    : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200'
-                }`}
+                className={`hud-chip capitalize ${activeGenre === genre ? 'hud-chip-active' : ''}`}
               >
                 {genre}
               </button>
@@ -106,11 +98,7 @@ export function PlaylistPanel({
               <button
                 type="button"
                 onClick={() => setActiveGenre('local')}
-                className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition ${
-                  activeGenre === 'local'
-                    ? 'bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/40'
-                    : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200'
-                }`}
+                className={`hud-chip capitalize ${activeGenre === 'local' ? 'hud-chip-active' : ''}`}
               >
                 Local
               </button>
@@ -121,19 +109,19 @@ export function PlaylistPanel({
 
       {tracks.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 text-zinc-500">
+          <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-sky-400/15 bg-sky-500/5 text-sky-400/40">
             <IconMusic className="h-8 w-8" />
           </div>
           <div>
-            <p className="text-sm font-medium text-zinc-300">Nothing here yet</p>
-            <p className="mt-1 max-w-[240px] text-xs leading-relaxed text-zinc-500">
-              Preview tracks in Discover, add the ones you like, or upload a local file
+            <p className="font-mono text-sm text-sky-100/80">No tracks in queue</p>
+            <p className="mt-1 max-w-[240px] font-mono text-[10px] leading-relaxed text-sky-400/45">
+              Scan Search or import local audio file
             </p>
           </div>
         </div>
       ) : visibleTracks.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center py-12 text-center text-sm text-zinc-500">
-          No tracks in this category
+        <div className="flex flex-1 items-center justify-center py-12 text-center font-mono text-xs text-sky-400/50">
+          No matches for selected filter
         </div>
       ) : (
         <ul className="custom-scrollbar flex flex-1 flex-col gap-1.5 overflow-y-auto pr-1">

@@ -40,7 +40,7 @@ export function SeekBar() {
 
   return (
     <div className="flex w-full items-center gap-3">
-      <span className="w-10 text-right text-xs tabular-nums text-zinc-400">
+      <span className="w-10 text-right font-mono text-xs tabular-nums text-sky-400/55">
         {formatTime(isDragging ? dragValue : currentTime)}
       </span>
       <Slider
@@ -54,7 +54,7 @@ export function SeekBar() {
         onPointerDown={() => setIsDragging(true)}
         className="flex-1"
       />
-      <span className="w-10 text-xs tabular-nums text-zinc-400">
+      <span className="w-10 font-mono text-xs tabular-nums text-sky-400/55">
         {formatTime(safeDuration)}
       </span>
     </div>

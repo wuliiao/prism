@@ -32,11 +32,14 @@ interface AudioEngineContextValue {
 
 const AudioEngineContext = createContext<AudioEngineContextValue | null>(null)
 
-const VOLUME_STORAGE_KEY = 'harmony-hub-volume'
+const VOLUME_STORAGE_KEY = 'prism-volume'
+const LEGACY_VOLUME_STORAGE_KEY = 'harmony-hub-volume'
 
 function readStoredVolume(): number {
   try {
-    const raw = localStorage.getItem(VOLUME_STORAGE_KEY)
+    const raw =
+      localStorage.getItem(VOLUME_STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_VOLUME_STORAGE_KEY)
     if (!raw) return 0.8
     const value = Number(raw)
     return Number.isFinite(value) && value >= 0 && value <= 1 ? value : 0.8

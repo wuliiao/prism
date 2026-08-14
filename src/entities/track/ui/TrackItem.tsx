@@ -18,9 +18,9 @@ interface TrackItemProps {
 function EqualizerBars() {
   return (
     <span className="flex h-3.5 items-end gap-0.5" aria-hidden="true">
-      <span className="animate-equalizer h-full w-0.5 rounded-full bg-violet-400" />
-      <span className="animate-equalizer animate-equalizer-delay-1 h-full w-0.5 rounded-full bg-violet-400" />
-      <span className="animate-equalizer animate-equalizer-delay-2 h-full w-0.5 rounded-full bg-violet-400" />
+      <span className="animate-equalizer h-full w-0.5 rounded-full bg-sky-400" />
+      <span className="animate-equalizer animate-equalizer-delay-1 h-full w-0.5 rounded-full bg-sky-400" />
+      <span className="animate-equalizer animate-equalizer-delay-2 h-full w-0.5 rounded-full bg-sky-400" />
     </span>
   )
 }
@@ -45,7 +45,7 @@ function TrackCover({
           className="h-11 w-11 rounded-lg object-cover shadow-md ring-1 ring-white/10"
         />
       ) : (
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500/30 to-fuchsia-500/20 text-violet-300 ring-1 ring-white/10">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-sky-400/20 bg-sky-500/10 text-sky-300">
           <IconMusic className="h-5 w-5" />
         </div>
       )}
@@ -64,7 +64,7 @@ function TrackCover({
       ) : null}
 
       {isPlaying && isActive ? (
-        <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-violet-500 shadow-lg">
+        <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border border-sky-300/40 bg-[#0a1525] shadow-[0_0_8px_rgb(56_189_248/30%)]">
           <EqualizerBars />
         </span>
       ) : null}
@@ -91,21 +91,21 @@ export function TrackItem({
     <>
       <TrackCover track={track} isActive={isActive} isPlaying={isPlaying} onPlay={onPlay} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-zinc-100">{track.title}</p>
-        <p className="truncate text-xs text-zinc-400">{track.artist}</p>
+        <p className="truncate text-sm font-medium text-sky-50">{track.title}</p>
+        <p className="truncate text-xs text-sky-200/50">{track.artist}</p>
       </div>
       {durationLabel ? (
-        <span className="shrink-0 text-xs tabular-nums text-zinc-500">{durationLabel}</span>
+        <span className="shrink-0 font-mono text-xs tabular-nums text-sky-400/45">{durationLabel}</span>
       ) : null}
     </>
   )
 
   return (
     <div
-      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 ${
+      className={`group flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-all duration-200 ${
         isActive
-          ? 'bg-violet-500/15 ring-1 ring-violet-400/40'
-          : 'bg-white/[0.03] hover:bg-white/[0.07]'
+          ? 'border-sky-400/35 bg-sky-500/10 shadow-[inset_0_0_20px_rgb(56_189_248/8%)]'
+          : 'border-transparent bg-sky-950/20 hover:border-sky-400/15 hover:bg-sky-500/8'
       }`}
     >
       {isDiscoverMode ? (
@@ -126,7 +126,7 @@ export function TrackItem({
             type="button"
             aria-label={`Remove ${track.title} from playlist`}
             title="Remove from playlist"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/25"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-[#d4af5f]/30 bg-[#d4af5f]/10 font-mono text-xs text-[#d4af5f] transition hover:bg-[#d4af5f]/20"
             onClick={() => onRemoveFromPlaylist?.(track)}
           >
             ✓
@@ -135,7 +135,7 @@ export function TrackItem({
           <button
             type="button"
             aria-label={`${actionLabel} ${track.title}`}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-300 transition hover:bg-violet-500/25"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-sky-400/25 bg-sky-500/10 text-sky-300 transition hover:bg-sky-500/20"
             onClick={() => onAdd?.(track)}
           >
             <IconPlus />
@@ -147,7 +147,7 @@ export function TrackItem({
         <button
           type="button"
           aria-label={`Remove ${track.title}`}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-500 opacity-0 transition group-hover:opacity-100 hover:bg-rose-500/15 hover:text-rose-300"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-sky-400/40 opacity-0 transition group-hover:opacity-100 hover:border hover:border-rose-400/25 hover:bg-rose-500/10 hover:text-rose-300"
           onClick={() => onRemove(track)}
         >
           <IconClose />

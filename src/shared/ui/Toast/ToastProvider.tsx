@@ -22,9 +22,9 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null)
 
 const toastStyles: Record<ToastType, string> = {
-  success: 'border-emerald-500/30 bg-emerald-500/15 text-emerald-100',
-  error: 'border-rose-500/30 bg-rose-500/15 text-rose-100',
-  info: 'border-violet-500/30 bg-violet-500/15 text-violet-100',
+  success: 'border-[#d4af5f]/30 bg-[#d4af5f]/10 text-[#f5e6c8]',
+  error: 'border-rose-400/30 bg-rose-500/10 text-rose-100',
+  info: 'border-sky-400/30 bg-sky-500/10 text-sky-100',
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur ${toastStyles[toast.type]}`}
+            className={`rounded-md border px-4 py-3 font-mono text-xs shadow-lg backdrop-blur ${toastStyles[toast.type]}`}
           >
             {toast.message}
           </div>

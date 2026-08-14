@@ -30,7 +30,8 @@ export class AudioEngine {
     if (!this.context) {
       this.context = new AudioContext()
       this.analyser = this.context.createAnalyser()
-      this.analyser.fftSize = 256
+      this.analyser.fftSize = 512
+      this.analyser.smoothingTimeConstant = 0.62
       this.analyser.connect(this.context.destination)
     }
     return this.context

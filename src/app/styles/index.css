@@ -2,10 +2,12 @@
 
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --color-surface: #0c0c0f;
-  --color-surface-elevated: #141418;
-  --color-accent: #8b5cf6;
-  --color-accent-soft: #a78bfa;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --color-surface: #050a14;
+  --color-surface-elevated: #0a1525;
+  --color-accent: #38bdf8;
+  --color-accent-soft: #7dd3fc;
+  --color-gold: #d4af5f;
 }
 
 * {
@@ -18,42 +20,107 @@ body {
   font-family: var(--font-sans);
   background-color: var(--color-surface);
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgb(139 92 246 / 22%), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 0%, rgb(59 130 246 / 10%), transparent),
-    radial-gradient(ellipse 50% 30% at 0% 100%, rgb(236 72 153 / 8%), transparent);
-  color: #f4f4f5;
+    radial-gradient(ellipse 75% 50% at 50% -18%, rgb(56 189 248 / 16%), transparent),
+    radial-gradient(ellipse 45% 35% at 100% 20%, rgb(59 130 246 / 10%), transparent),
+    radial-gradient(ellipse 40% 30% at 0% 80%, rgb(56 189 248 / 6%), transparent),
+    linear-gradient(180deg, #050a14 0%, #071018 50%, #050a14 100%);
+  color: #e0f2fe;
   -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgb(56 189 248 / 6%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(56 189 248 / 6%) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 85% 70% at 50% 40%, black 20%, transparent 75%);
 }
 
 #root {
   min-height: 100vh;
+  position: relative;
+  z-index: 1;
 }
 
 code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
 }
 
 .glass-panel {
-  border: 1px solid rgb(255 255 255 / 8%);
-  background: rgb(20 20 24 / 72%);
+  border: 1px solid rgb(56 189 248 / 18%);
+  background: rgb(8 18 32 / 78%);
   backdrop-filter: blur(16px);
   box-shadow:
-    0 4px 24px rgb(0 0 0 / 25%),
-    inset 0 1px 0 rgb(255 255 255 / 6%);
+    inset 0 0 40px rgb(56 189 248 / 4%),
+    0 4px 28px rgb(0 0 0 / 35%);
 }
 
 .glass-panel-strong {
-  border: 1px solid rgb(255 255 255 / 10%);
-  background: rgb(12 12 15 / 88%);
+  border: 1px solid rgb(56 189 248 / 22%);
+  background: rgb(5 10 20 / 92%);
   backdrop-filter: blur(20px);
-  box-shadow: 0 -8px 32px rgb(0 0 0 / 35%);
+  box-shadow:
+    inset 0 1px 0 rgb(56 189 248 / 8%),
+    0 -8px 32px rgb(0 0 0 / 45%);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #f4f4f5 0%, #a78bfa 100%);
+  background: linear-gradient(135deg, #f0f9ff 0%, #38bdf8 55%, #d4af5f 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.hud-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(56 189 248 / 70%);
+}
+
+.hud-chip {
+  border-radius: 4px;
+  border: 1px solid rgb(56 189 248 / 15%);
+  background: rgb(56 189 248 / 6%);
+  padding: 0.25rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(125 211 252 / 70%);
+  transition: all 0.2s;
+}
+
+.hud-chip:hover {
+  border-color: rgb(56 189 248 / 30%);
+  background: rgb(56 189 248 / 12%);
+  color: #e0f2fe;
+}
+
+.hud-chip-active {
+  border-color: rgb(56 189 248 / 45%);
+  background: rgb(56 189 248 / 18%);
+  color: #bae6fd;
+  box-shadow: 0 0 12px rgb(56 189 248 / 15%);
+}
+
+.arc-reactor {
+  background:
+    radial-gradient(circle at center, rgb(186 230 253 / 90%) 0%, rgb(56 189 248 / 80%) 35%, transparent 36%),
+    radial-gradient(circle at center, transparent 42%, rgb(56 189 248 / 25%) 43%, transparent 55%),
+    conic-gradient(from 0deg, rgb(56 189 248 / 30%), rgb(59 130 246 / 15%), rgb(56 189 248 / 30%));
+  box-shadow:
+    0 0 24px rgb(56 189 248 / 35%),
+    inset 0 0 12px rgb(186 230 253 / 20%);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -66,11 +133,11 @@ code {
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgb(255 255 255 / 12%);
+  background: rgb(56 189 248 / 20%);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgb(255 255 255 / 20%);
+  background: rgb(56 189 248 / 35%);
 }
 
 @keyframes pulse-soft {

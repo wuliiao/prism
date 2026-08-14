@@ -43,7 +43,7 @@ export function UploadTrackButton({ onUpload, onError }: UploadTrackButtonProps)
       />
       <Button variant="ghost" onClick={() => inputRef.current?.click()}>
         <IconUpload className="h-4 w-4" />
-        Upload
+        Import local file
       </Button>
     </>
   )

@@ -3,7 +3,7 @@ import type { Track } from '@entities/track'
 import { useAudioEngine } from '@entities/audio'
 import { usePlaylist } from '@features/manage-playlist'
 import { UploadTrackButton } from '@features/upload-track'
-import { IconMusic, IconPlus } from '@shared/ui/Icon'
+import { IconPlus } from '@shared/ui/Icon'
 import { useToast } from '@shared/ui/Toast'
 import { useKeyboardShortcuts } from '@shared/lib/useKeyboardShortcuts'
 import { AudioVisualizer } from '@widgets/audio-visualizer'
@@ -177,16 +177,20 @@ export function PlayerPage() {
           ? `${isPlaying ? 'Playing' : 'Paused'}: ${currentTrack.title} by ${currentTrack.artist}`
           : 'No track selected'}
       </p>
+
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/30">
-            <IconMusic className="h-5 w-5 text-white" />
-          </div>
+        <div className="flex items-center gap-4">
+          <img
+            src="/logo.png"
+            alt="PRISM logo"
+            className="h-14 w-14 shrink-0 rounded-full object-cover drop-shadow-[0_0_16px_rgb(56_189_248/45%)]"
+          />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gradient sm:text-3xl">
-              Harmony Hub
-            </h1>
-            <p className="text-xs text-zinc-500 sm:text-sm">Listen. Visualize. Vibe.</p>
+            <p className="hud-label mb-0.5">Stark Industries</p>
+            <h1 className="text-2xl font-bold tracking-tight text-gradient sm:text-3xl">PRISM</h1>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-sky-400/45">
+              Personal Reactive Interactive Sound Matrix
+            </p>
           </div>
         </div>
         <UploadTrackButton
@@ -202,18 +206,27 @@ export function PlayerPage() {
               <img
                 src={currentTrack.coverUrl}
                 alt={currentTrack.title}
-                className={`h-full w-full rounded-2xl object-cover shadow-2xl shadow-black/50 ring-1 ring-white/10 transition motion-reduce:transform-none ${
+                className={`h-full w-full rounded-lg border border-sky-400/25 object-cover shadow-[0_8px_40px_rgb(0_0_0/50%),0_0_40px_rgb(56_189_248/8%)] transition motion-reduce:transform-none ${
                   isPlaying ? 'scale-[1.02]' : ''
                 } ${isLoading ? 'opacity-60' : ''}`}
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 shadow-2xl ring-1 ring-white/10">
-                <IconMusic className="h-16 w-16 text-zinc-600" />
+              <div className="flex h-full w-full items-center justify-center">
+                <img
+                  src="/logo.png"
+                  alt=""
+                  aria-hidden
+                  className="h-36 w-36 rounded-full object-cover opacity-40 drop-shadow-[0_0_32px_rgb(56_189_248/35%)]"
+                />
               </div>
             )}
+            <span className="pointer-events-none absolute left-2 top-2 h-3 w-3 border-l border-t border-sky-400/40" />
+            <span className="pointer-events-none absolute right-2 top-2 h-3 w-3 border-r border-t border-sky-400/40" />
+            <span className="pointer-events-none absolute bottom-2 left-2 h-3 w-3 border-b border-l border-sky-400/40" />
+            <span className="pointer-events-none absolute bottom-2 right-2 h-3 w-3 border-b border-r border-sky-400/40" />
             {isLoading ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-violet-400" />
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#050a14]/40 backdrop-blur-[2px]">
+                <span className="h-10 w-10 animate-spin rounded-full border-2 border-sky-400/20 border-t-sky-400" />
               </div>
             ) : null}
             {currentTrack && !isLoading ? (
@@ -222,7 +235,7 @@ export function PlayerPage() {
                   type="button"
                   aria-label={`Remove ${currentTrack.title} from playlist`}
                   title="Remove from playlist"
-                  className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/90 text-sm font-semibold text-white shadow-lg ring-2 ring-black/20 transition hover:bg-emerald-400 active:scale-95"
+                  className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full border border-[#d4af5f]/40 bg-[#d4af5f]/90 font-mono text-sm font-semibold text-[#0a1525] shadow-[0_0_16px_rgb(212_175_95/35%)] transition hover:bg-[#e8c878] active:scale-95"
                   onClick={() => handleRemoveFromPlaylist(currentTrack)}
                 >
                   ✓
@@ -232,7 +245,7 @@ export function PlayerPage() {
                   type="button"
                   aria-label={`Add ${currentTrack.title} to playlist`}
                   title="Add to playlist"
-                  className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/90 text-white shadow-lg ring-2 ring-black/20 transition hover:bg-violet-400 active:scale-95"
+                  className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full border border-sky-300/40 bg-sky-500/90 text-white shadow-[0_0_16px_rgb(56_189_248/35%)] transition hover:bg-sky-400 active:scale-95"
                   onClick={() => handleAddToPlaylist(currentTrack)}
                 >
                   <IconPlus className="h-5 w-5" />
@@ -241,25 +254,26 @@ export function PlayerPage() {
             ) : null}
           </div>
           <div className="w-full text-center lg:text-left">
-            <p className="truncate text-lg font-semibold text-zinc-100">
-              {currentTrack?.title ?? 'Ready when you are'}
+            <p className="truncate font-mono text-[10px] uppercase tracking-widest text-sky-400/50">
+              Now playing
             </p>
-            <p className="truncate text-sm text-zinc-400">
-              {currentTrack?.artist ?? 'Explore tracks below'}
+            <p className="truncate text-lg font-semibold text-sky-50">
+              {currentTrack?.title ?? 'Awaiting signal'}
+            </p>
+            <p className="truncate font-mono text-sm text-sky-300/60">
+              {currentTrack?.artist ?? 'Select track from Search or queue'}
             </p>
             {currentTrack ? (
-              <span className="mt-2 inline-block rounded-full bg-white/5 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-zinc-400">
+              <span className="mt-2 inline-block rounded border border-sky-400/20 bg-sky-500/8 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-sky-300/70">
                 {currentTrack.source}
               </span>
             ) : null}
           </div>
         </div>
 
-        <div className="glass-panel rounded-2xl p-4 sm:p-5">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
-            Live visualizer
-          </p>
-          <AudioVisualizer height={220} />
+        <div className="glass-panel rounded-lg p-4 sm:p-5">
+          <p className="hud-label mb-3">PRISM // Audio analysis</p>
+          <AudioVisualizer height={240} />
         </div>
       </section>
 
