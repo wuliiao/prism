@@ -39,15 +39,18 @@ export function usePlaylist() {
     return result
   }, [persist])
 
-  const addTracks = useCallback((newTracks: Track[]) => {
+  const addTracks = useCallback((newTracks: Track[]): number => {
+    let addedCount = 0
     setTracks((prev) => {
       const ids = new Set(prev.map((track) => track.id))
       const unique = newTracks.filter((track) => !ids.has(track.id))
+      addedCount = unique.length
       if (unique.length === 0) return prev
       const next = [...prev, ...unique]
       persist(next)
       return next
     })
+    return addedCount
   }, [persist])
 
   const removeTrack = useCallback((trackId: string) => {

@@ -65,6 +65,18 @@ export function PlayerPage() {
     [addTrack, currentTrack?.id, selectTrack, showToast],
   )
 
+  const handleAddAll = useCallback(
+    (newTracks: Track[]) => {
+      const addedCount = addTracks(newTracks)
+      if (addedCount > 0) {
+        showToast(`Added ${addedCount} track${addedCount === 1 ? '' : 's'} to playlist`, 'success')
+      } else {
+        showToast('All tracks are already in playlist', 'info')
+      }
+    },
+    [addTracks, showToast],
+  )
+
   const handleUpload = useCallback(
     async (track: Track) => {
       addAndSelect(track)
@@ -207,7 +219,7 @@ export function PlayerPage() {
         <TrackSearchPanel
           onPreviewTrack={(track) => void previewTrack(track)}
           onAddTrack={handleAddToPlaylist}
-          onAddAll={addTracks}
+          onAddAll={handleAddAll}
           isInPlaylist={isInPlaylist}
           currentTrack={currentTrack}
           isPlaying={isPlaying}
