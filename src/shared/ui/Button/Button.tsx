@@ -29,7 +29,7 @@ export function Button({
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center gap-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050a14] disabled:cursor-not-allowed disabled:opacity-40 ${sizeClasses} ${variantClasses[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050a14] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${sizeClasses} ${variantClasses[variant]} ${className}`}
       {...props}
     >
       {children}
