@@ -41,6 +41,17 @@ export const Empty: Story = {
   },
 }
 
+export const EmptyWithQuickAdd: Story = {
+  args: {
+    tracks: [],
+    currentTrack: null,
+    isPlaying: false,
+    onSelect: () => {},
+    onRemove: () => {},
+    onQuickAddGenre: (tag) => console.log('Quick add:', tag),
+  },
+}
+
 export const WithTracks: Story = {
   args: {
     tracks,

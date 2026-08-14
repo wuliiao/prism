@@ -15,8 +15,6 @@ interface TrackSearchPanelProps {
   isPlaying: boolean
 }
 
-const GENRE_TAGS = ['chill', 'jazz', 'electronic', 'ambient', 'rock', 'lofi', 'pop']
-
 export function TrackSearchPanel({
   onPreviewTrack,
   onAddTrack,
@@ -38,11 +36,6 @@ export function TrackSearchPanel({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     void search(query)
-  }
-
-  const handleTagClick = (tag: string) => {
-    setQuery(tag)
-    void search(tag)
   }
 
   if (!isJamendoConfigured()) {
@@ -86,23 +79,6 @@ export function TrackSearchPanel({
             )}
           </Button>
         </form>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {GENRE_TAGS.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => handleTagClick(tag)}
-              className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition ${
-                query === tag
-                  ? 'bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/40'
-                  : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200'
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
       </header>
 
       {error ? (
