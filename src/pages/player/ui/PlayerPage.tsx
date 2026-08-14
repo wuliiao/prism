@@ -146,7 +146,10 @@ export function PlayerPage() {
             <p className="text-xs text-zinc-500 sm:text-sm">Listen. Visualize. Vibe.</p>
           </div>
         </div>
-        <UploadTrackButton onUpload={handleUpload} />
+        <UploadTrackButton
+          onUpload={handleUpload}
+          onError={(message) => showToast(message, 'error')}
+        />
       </header>
 
       <section className="mb-8 grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">

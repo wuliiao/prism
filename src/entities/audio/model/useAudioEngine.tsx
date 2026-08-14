@@ -35,6 +35,7 @@ const AudioEngineContext = createContext<AudioEngineContextValue | null>(null)
 export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const engineRef = useRef<AudioEngine | null>(null)
   const onTrackEndedRef = useRef<(() => void) | null>(null)
+  const activeBlobUrlRef = useRef<string | null>(null)
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -63,6 +64,10 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
     }
 
     return () => {
+      if (activeBlobUrlRef.current) {
+        URL.revokeObjectURL(activeBlobUrlRef.current)
+        activeBlobUrlRef.current = null
+      }
       engine.destroy()
       engineRef.current = null
     }
@@ -71,6 +76,17 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const loadTrack = useCallback(async (track: Track) => {
     const engine = engineRef.current
     if (!engine) return
+
+    if (isLoading) return
+
+    if (activeBlobUrlRef.current && activeBlobUrlRef.current !== track.audioUrl) {
+      URL.revokeObjectURL(activeBlobUrlRef.current)
+      activeBlobUrlRef.current = null
+    }
+
+    if (track.audioUrl.startsWith('blob:')) {
+      activeBlobUrlRef.current = track.audioUrl
+    }
 
     setIsLoading(true)
     setError(null)
@@ -89,7 +105,7 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [isLoading])
 
   const play = useCallback(async () => {
     const engine = engineRef.current
