@@ -81,4 +81,21 @@ describe('usePlaylist', () => {
 
     expect(result.current.tracks[0]?.duration).toBe(187)
   })
+
+  it('drops local blob tracks after reload and notifies', () => {
+    const localTrack: Track = {
+      ...mockTrack,
+      id: 'local-1',
+      source: 'local',
+      audioUrl: 'blob:http://localhost/abc',
+    }
+    localStorage.setItem('prism-playlist', JSON.stringify([mockTrack, localTrack]))
+    const onDroppedLocalTracks = jest.fn()
+
+    const { result } = renderHook(() => usePlaylist({ onDroppedLocalTracks }))
+
+    expect(result.current.tracks).toEqual([mockTrack])
+    expect(onDroppedLocalTracks).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(String(localStorage.getItem('prism-playlist')))).toEqual([mockTrack])
+  })
 })

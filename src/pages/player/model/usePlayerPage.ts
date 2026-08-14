@@ -22,6 +22,8 @@ export function usePlayerPage() {
     playPrevious,
   } = usePlaylist({
     onStorageError: () => showToast("Playlist couldn't be saved on this device", 'error'),
+    onDroppedLocalTracks: () =>
+      showToast('Local files were removed after refresh. Import them again.', 'info'),
   })
 
   const isPlaylistPlaybackRef = useRef(true)
