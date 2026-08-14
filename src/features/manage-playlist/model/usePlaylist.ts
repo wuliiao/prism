@@ -5,6 +5,10 @@ const STORAGE_KEY = 'harmony-hub-playlist'
 
 export type AddTrackResult = 'added' | 'exists'
 
+interface UsePlaylistOptions {
+  onStorageError?: () => void
+}
+
 function readStoredPlaylist(): Track[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -15,7 +19,8 @@ function readStoredPlaylist(): Track[] {
   }
 }
 
-export function usePlaylist() {
+export function usePlaylist(options?: UsePlaylistOptions) {
+  const onStorageError = options?.onStorageError
   const [tracks, setTracks] = useState<Track[]>(() => readStoredPlaylist())
   const [currentIndex, setCurrentIndex] = useState(-1)
 
@@ -23,9 +28,9 @@ export function usePlaylist() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     } catch {
-      // quota exceeded — keep in memory only
+      onStorageError?.()
     }
-  }, [])
+  }, [onStorageError])
 
   const addTrack = useCallback((track: Track): AddTrackResult => {
     let result: AddTrackResult = 'exists'

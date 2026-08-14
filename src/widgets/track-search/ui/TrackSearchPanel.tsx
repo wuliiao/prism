@@ -45,13 +45,18 @@ export function TrackSearchPanel({
 
   if (!isJamendoConfigured()) {
     return (
-      <section className="glass-panel flex h-full flex-col rounded-2xl p-5">
-        <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-100">
-          <p className="font-semibold">Jamendo API not configured</p>
-          <p className="mt-1.5 leading-relaxed text-amber-200/80">
-            Copy <code className="rounded bg-black/20 px-1.5 py-0.5">.env.example</code> to{' '}
-            <code className="rounded bg-black/20 px-1.5 py-0.5">.env</code> and add your{' '}
-            <code className="rounded bg-black/20 px-1.5 py-0.5">VITE_JAMENDO_CLIENT_ID</code>.
+      <section className="glass-panel flex h-full min-h-[420px] flex-col rounded-2xl p-5">
+        <header className="mb-4">
+          <h2 className="text-base font-semibold text-zinc-100">Discover</h2>
+          <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+            Jamendo search is unavailable. Upload a local file or add{' '}
+            <code className="rounded bg-white/5 px-1 py-0.5 text-zinc-400">VITE_JAMENDO_CLIENT_ID</code> to{' '}
+            <code className="rounded bg-white/5 px-1 py-0.5 text-zinc-400">.env</code>.
+          </p>
+        </header>
+        <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-8 text-center">
+          <p className="max-w-xs text-sm text-zinc-500">
+            Use the Upload button above to play your own music while API access is not configured.
           </p>
         </div>
       </section>

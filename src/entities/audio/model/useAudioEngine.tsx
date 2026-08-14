@@ -32,6 +32,19 @@ interface AudioEngineContextValue {
 
 const AudioEngineContext = createContext<AudioEngineContextValue | null>(null)
 
+const VOLUME_STORAGE_KEY = 'harmony-hub-volume'
+
+function readStoredVolume(): number {
+  try {
+    const raw = localStorage.getItem(VOLUME_STORAGE_KEY)
+    if (!raw) return 0.8
+    const value = Number(raw)
+    return Number.isFinite(value) && value >= 0 && value <= 1 ? value : 0.8
+  } catch {
+    return 0.8
+  }
+}
+
 export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const engineRef = useRef<AudioEngine | null>(null)
   const onTrackEndedRef = useRef<(() => void) | null>(null)
@@ -42,13 +55,13 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [volume, setVolumeState] = useState(0.8)
+  const [volume, setVolumeState] = useState(() => readStoredVolume())
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null)
 
   useEffect(() => {
     const engine = new AudioEngine()
     engineRef.current = engine
-    engine.setVolume(0.8)
+    engine.setVolume(readStoredVolume())
     setAnalyser(engine.getAnalyser())
 
     engine.onTimeUpdate = (time) => {
@@ -145,6 +158,11 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const setVolume = useCallback((value: number) => {
     engineRef.current?.setVolume(value)
     setVolumeState(value)
+    try {
+      localStorage.setItem(VOLUME_STORAGE_KEY, String(value))
+    } catch {
+      // ignore storage failures for volume
+    }
   }, [])
 
   const clearError = useCallback(() => setError(null), [])
