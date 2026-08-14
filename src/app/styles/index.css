@@ -107,3 +107,11 @@ code {
 .animate-equalizer-delay-2 {
   animation-delay: 0.3s;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-equalizer,
+  .animate-equalizer-delay-1,
+  .animate-equalizer-delay-2 {
+    animation: none;
+  }
+}
