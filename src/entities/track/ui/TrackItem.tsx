@@ -53,11 +53,11 @@ function TrackCover({
         <button
           type="button"
           aria-label={`Play ${track.title}`}
-          className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/55 opacity-0 transition-opacity group-hover/cover:opacity-100 focus-visible:opacity-100"
+          className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/5 opacity-0 transition-opacity group-hover/cover:opacity-100 focus-visible:opacity-100"
           onClick={() => onPlay(track)}
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-zinc-900 shadow-lg">
-            <IconPlay className="h-4 w-4 translate-x-0.5" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/55 text-zinc-900 shadow-sm backdrop-blur-[1px]">
+            <IconPlay className="h-4 w-4" />
           </span>
         </button>
       ) : null}
