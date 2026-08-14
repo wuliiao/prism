@@ -16,7 +16,12 @@ function averageEnergy(spectrum: Uint8Array) {
     sum += value
     peak = Math.max(peak, value)
   }
-  return Math.min(1, (sum / spectrum.length / 255) * 0.4 + (peak / 255) * 0.6)
+  return Math.min(1, (sum / spectrum.length / 255) * 0.7 + (peak / 255) * 0.3)
+}
+
+function waveValue(raw: number, isByteData: boolean) {
+  const value = isByteData ? (raw - 128) / 128 : raw
+  return Math.tanh(value * 1.2) * 0.7
 }
 
 function drawHudFrame(context: CanvasRenderingContext2D, width: number, height: number) {
@@ -72,15 +77,21 @@ function buildWavePath(
 ) {
   context.beginPath()
   const last = samples.length - 1
+  const step = Math.max(1, Math.floor(samples.length / 160))
 
-  for (let index = 0; index < samples.length; index += 1) {
+  for (let index = 0; index <= last; index += step) {
     const progress = last === 0 ? 0 : index / last
     const raw = samples[index] ?? (isByteData ? 128 : 0)
-    const value = isByteData ? (raw - 128) / 128 : raw
+    const value = waveValue(raw, isByteData)
     const x = progress * width
     const y = centerY + value * amplitude
     if (index === 0) context.moveTo(x, y)
     else context.lineTo(x, y)
+  }
+
+  if (last % step !== 0) {
+    const raw = samples[last] ?? (isByteData ? 128 : 0)
+    context.lineTo(width, centerY + waveValue(raw, isByteData) * amplitude)
   }
 }
 
@@ -121,7 +132,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
           lastLiveWaveformRef.current = new Uint8Array(waveform.length)
         }
         lastLiveWaveformRef.current.set(waveform)
-        energyRef.current += (averageEnergy(spectrum) - energyRef.current) * 0.35
+        energyRef.current += (averageEnergy(spectrum) - energyRef.current) * 0.16
       } else if (hasFrozenWave) {
         energyRef.current += (0.08 - energyRef.current) * 0.18
       } else {
@@ -136,7 +147,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
 
       const energy = energyRef.current
       const showLiveWave = hasLiveAudio || hasFrozenWave
-      const amplitude = canvasHeight * (showLiveWave ? 0.32 + energy * 0.12 : 0.22)
+      const amplitude = canvasHeight * (showLiveWave ? 0.2 + energy * 0.08 : 0.22)
 
       context.setTransform(1, 0, 0, 1, 0, 0)
       context.clearRect(0, 0, canvas.width, canvas.height)
