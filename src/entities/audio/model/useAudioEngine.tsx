@@ -49,6 +49,7 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const engineRef = useRef<AudioEngine | null>(null)
   const onTrackEndedRef = useRef<(() => void) | null>(null)
   const activeBlobUrlRef = useRef<string | null>(null)
+  const loadRequestRef = useRef(0)
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -90,7 +91,7 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
     const engine = engineRef.current
     if (!engine) return
 
-    if (isLoading) return
+    const requestId = ++loadRequestRef.current
 
     if (activeBlobUrlRef.current && activeBlobUrlRef.current !== track.audioUrl) {
       URL.revokeObjectURL(activeBlobUrlRef.current)
@@ -106,19 +107,27 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
 
     try {
       await engine.loadTrack(track)
+      if (requestId !== loadRequestRef.current) return
+
       setCurrentTrack(track)
       setCurrentTime(0)
       setDuration(track.duration || engine.getDuration())
       setAnalyser(engine.getAnalyser())
       await engine.play()
+      if (requestId !== loadRequestRef.current) return
+
       setIsPlaying(true)
     } catch {
+      if (requestId !== loadRequestRef.current) return
+
       setError("Couldn't play this track. Try another one or upload a local file.")
       setIsPlaying(false)
     } finally {
-      setIsLoading(false)
+      if (requestId === loadRequestRef.current) {
+        setIsLoading(false)
+      }
     }
-  }, [isLoading])
+  }, [])
 
   const play = useCallback(async () => {
     const engine = engineRef.current

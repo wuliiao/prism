@@ -5,7 +5,6 @@ export class AudioEngine {
   private context: AudioContext | null = null
   private analyser: AnalyserNode | null = null
   private sourceNode: MediaElementAudioSourceNode | null = null
-  private connectedUrl: string | null = null
 
   onTimeUpdate: ((currentTime: number) => void) | null = null
   onEnded: (() => void) | null = null
@@ -37,25 +36,18 @@ export class AudioEngine {
     return this.context
   }
 
-  private connectSource(url: string): void {
-    if (this.connectedUrl === url) return
+  private ensureSourceConnected(): void {
+    if (this.sourceNode) return
 
     const context = this.ensureContext()
-
-    if (this.sourceNode) {
-      this.sourceNode.disconnect()
-      this.sourceNode = null
-    }
-
     this.sourceNode = context.createMediaElementSource(this.audio)
     this.sourceNode.connect(this.analyser!)
-    this.connectedUrl = url
   }
 
   async loadTrack(track: Track): Promise<void> {
     this.pause()
     this.audio.src = track.audioUrl
-    this.connectSource(track.audioUrl)
+    this.ensureSourceConnected()
     this.audio.load()
   }
 
@@ -115,6 +107,5 @@ export class AudioEngine {
     this.context = null
     this.analyser = null
     this.sourceNode = null
-    this.connectedUrl = null
   }
 }
