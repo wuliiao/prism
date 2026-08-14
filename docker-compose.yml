@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - '5173:5173'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .env
+
+  app-prod:
+    build:
+      context: .
+      target: production
+    ports:
+      - '8080:80'
+    profiles:
+      - prod
