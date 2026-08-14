@@ -25,7 +25,9 @@ export function PlayerPage() {
     isInPlaylist,
     playNext,
     playPrevious,
-  } = usePlaylist()
+  } = usePlaylist({
+    onStorageError: () => showToast("Playlist couldn't be saved on this device", 'error'),
+  })
 
   const isPlaylistPlaybackRef = useRef(true)
   const queuedAfterRemoveRef = useRef<Track | null>(null)

@@ -40,8 +40,8 @@ export function PlaylistPanel({
           </div>
           <div>
             <p className="text-sm font-medium text-zinc-300">Nothing here yet</p>
-            <p className="mt-1 max-w-[220px] text-xs leading-relaxed text-zinc-500">
-              Browse Discover or upload a local file to build your queue
+            <p className="mt-1 max-w-[240px] text-xs leading-relaxed text-zinc-500">
+              Preview tracks in Discover, add the ones you like, or upload a local file
             </p>
           </div>
         </div>
