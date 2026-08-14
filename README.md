@@ -91,8 +91,8 @@ App will be available at [http://localhost:8080](http://localhost:8080)
 
 ## GitFlow workflow
 
-Feature branches are created from `develop` and merged back into `develop`.
-`main` is updated only when a release is ready.
+One task → one branch from `develop` → merge back into `develop` with `--no-ff`.
+Delete the feature branch after it lands. `main` is updated only when a release is ready.
 
 ```bash
 git checkout develop
@@ -102,12 +102,14 @@ git checkout -b feature/my-task
 # ... work, commit ...
 
 git checkout develop
-git merge feature/my-task
+git merge --no-ff feature/my-task
 git push origin develop
+git branch -d feature/my-task
+git push origin --delete feature/my-task
 
 # When ready for release:
 git checkout main
-git merge develop
+git merge --no-ff develop
 git push origin main
 ```
 
