@@ -28,6 +28,7 @@ export function PlayerPage() {
   } = usePlaylist()
 
   const isPlaylistPlaybackRef = useRef(true)
+  const queuedAfterRemoveRef = useRef<Track | null>(null)
 
   const playTrack = useCallback(
     async (track: Track) => {
@@ -87,6 +88,24 @@ export function PlayerPage() {
     [addAndSelect, loadTrack, showToast],
   )
 
+  const handleRemoveTrack = useCallback(
+    (track: Track) => {
+      const isCurrentlyPlaying = currentTrack?.id === track.id
+
+      if (isCurrentlyPlaying) {
+        const index = tracks.findIndex((item) => item.id === track.id)
+        queuedAfterRemoveRef.current =
+          index >= 0 && index < tracks.length - 1 ? tracks[index + 1] ?? null : null
+        isPlaylistPlaybackRef.current = queuedAfterRemoveRef.current !== null
+        removeTrack(track.id, { keepPlaying: true })
+        return
+      }
+
+      removeTrack(track.id)
+    },
+    [currentTrack?.id, removeTrack, tracks],
+  )
+
   const handleNext = useCallback(async () => {
     isPlaylistPlaybackRef.current = true
     const next = playNext()
@@ -101,14 +120,23 @@ export function PlayerPage() {
 
   useEffect(() => {
     return registerOnTrackEnded(() => {
-      if (!isPlaylistPlaybackRef.current) return
-
       void (async () => {
+        if (queuedAfterRemoveRef.current) {
+          const next = queuedAfterRemoveRef.current
+          queuedAfterRemoveRef.current = null
+          isPlaylistPlaybackRef.current = true
+          selectTrack(next)
+          await loadTrack(next)
+          return
+        }
+
+        if (!isPlaylistPlaybackRef.current) return
+
         const next = playNext()
         if (next) await loadTrack(next)
       })()
     })
-  }, [loadTrack, playNext, registerOnTrackEnded])
+  }, [loadTrack, playNext, registerOnTrackEnded, selectTrack])
 
   useEffect(() => {
     if (error) {
@@ -232,7 +260,7 @@ export function PlayerPage() {
           currentTrack={currentTrack}
           isPlaying={isPlaying}
           onSelect={(track) => void playTrack(track)}
-          onRemove={(track) => removeTrack(track.id)}
+          onRemove={(track) => handleRemoveTrack(track)}
         />
       </div>
 

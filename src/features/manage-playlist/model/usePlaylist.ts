@@ -53,15 +53,19 @@ export function usePlaylist() {
     return addedCount
   }, [persist])
 
-  const removeTrack = useCallback((trackId: string) => {
+  const removeTrack = useCallback((trackId: string, options?: { keepPlaying?: boolean }) => {
     setTracks((prev) => {
       const index = prev.findIndex((track) => track.id === trackId)
       const next = prev.filter((track) => track.id !== trackId)
 
-      setCurrentIndex((current) => {
-        if (index === -1 || current !== index) return current
-        return Math.max(0, current - 1)
-      })
+      if (!options?.keepPlaying) {
+        setCurrentIndex((current) => {
+          if (index === -1) return current
+          if (current === index) return next.length === 0 ? -1 : Math.min(current, next.length - 1)
+          if (current > index) return current - 1
+          return current
+        })
+      }
 
       persist(next)
       return next
