@@ -90,7 +90,7 @@ export function PlayerPage() {
   })
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-36 pt-6 sm:px-6 sm:pt-8">
+    <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-44 pt-6 sm:px-6 sm:pb-36 sm:pt-8">
       <p className="sr-only" aria-live="polite">
         {currentTrack
           ? `${isPlaying ? 'Playing' : 'Paused'}: ${currentTrack.title} by ${currentTrack.artist}`
