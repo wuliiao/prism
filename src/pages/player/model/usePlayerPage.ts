@@ -6,7 +6,7 @@ import { useToast } from '@shared/ui/Toast'
 import { useKeyboardShortcuts } from '@shared/lib'
 
 export function usePlayerPage() {
-  const { loadTrack, currentTrack, isPlaying, isLoading, error, clearError, registerOnTrackEnded, toggle, seek, currentTime, duration } =
+  const { loadTrack, currentTrack, isPlaying, isLoading, error, clearError, registerOnTrackEnded, toggle, seek, currentTime, duration, toggleMute } =
     useAudioEngine()
   const { showToast } = useToast()
   const {
@@ -20,6 +20,11 @@ export function usePlayerPage() {
     isInPlaylist,
     playNext,
     playPrevious,
+    playOnEnded,
+    repeatMode,
+    shuffle,
+    cycleRepeat,
+    toggleShuffle,
   } = usePlaylist({
     onStorageError: () => showToast("Playlist couldn't be saved on this device", 'error'),
     onDroppedLocalTracks: () =>
@@ -149,11 +154,11 @@ export function usePlayerPage() {
 
         if (!isPlaylistPlaybackRef.current) return
 
-        const next = playNext()
+        const next = playOnEnded()
         if (next) await loadTrack(next)
       })()
     })
-  }, [loadTrack, playNext, registerOnTrackEnded, selectTrack])
+  }, [loadTrack, playOnEnded, registerOnTrackEnded, selectTrack])
 
   useEffect(() => {
     if (error) {
@@ -180,6 +185,9 @@ export function usePlayerPage() {
     onTogglePlay: () => void toggle(),
     onSeekBackward: () => seek(Math.max(0, currentTime - 5)),
     onSeekForward: () => seek(currentTime + 5),
+    onNext: () => void handleNext(),
+    onPrevious: () => void handlePrevious(),
+    onMute: toggleMute,
     enabled: Boolean(currentTrack),
   })
 
@@ -203,5 +211,9 @@ export function usePlayerPage() {
     handleRemoveTrack,
     handleNext,
     handlePrevious,
+    shuffle,
+    repeatMode,
+    toggleShuffle,
+    cycleRepeat,
   }
 }

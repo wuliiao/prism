@@ -1,7 +1,17 @@
 import { useAudioEngine } from '@entities/audio'
+import type { RepeatMode } from '@features/manage-playlist'
 import { PlayPauseButton } from '@features/toggle-playback'
 import { SeekBar } from '@features/seek-track'
-import { IconMusic, IconSkipBack, IconSkipForward, IconVolume } from '@shared/ui/Icon'
+import {
+  IconMusic,
+  IconRepeat,
+  IconRepeatOne,
+  IconShuffle,
+  IconSkipBack,
+  IconSkipForward,
+  IconVolume,
+  IconVolumeMuted,
+} from '@shared/ui/Icon'
 import { Slider } from '@shared/ui/Slider'
 import { Button } from '@shared/ui/Button'
 
@@ -9,10 +19,28 @@ interface PlayerBarProps {
   canNavigate: boolean
   onNext: () => void
   onPrevious: () => void
+  shuffle?: boolean
+  repeatMode?: RepeatMode
+  onToggleShuffle?: () => void
+  onCycleRepeat?: () => void
 }
 
-export function PlayerBar({ canNavigate, onNext, onPrevious }: PlayerBarProps) {
-  const { currentTrack, volume, setVolume } = useAudioEngine()
+const REPEAT_LABEL: Record<RepeatMode, string> = {
+  off: 'Repeat off',
+  all: 'Repeat playlist',
+  one: 'Repeat track',
+}
+
+export function PlayerBar({
+  canNavigate,
+  onNext,
+  onPrevious,
+  shuffle = false,
+  repeatMode = 'all',
+  onToggleShuffle,
+  onCycleRepeat,
+}: PlayerBarProps) {
+  const { currentTrack, volume, setVolume, toggleMute } = useAudioEngine()
 
   const volumeSlider = (
     <Slider
@@ -64,7 +92,16 @@ export function PlayerBar({ canNavigate, onNext, onPrevious }: PlayerBarProps) {
             </div>
           </div>
 
-          <div className="col-start-2 row-start-1 flex items-center gap-0.5 sm:gap-2">
+          <div className="col-start-2 row-start-1 flex items-center gap-0.5 sm:gap-1">
+            <Button
+              variant="icon"
+              aria-label={shuffle ? 'Shuffle on' : 'Shuffle off'}
+              aria-pressed={shuffle}
+              className={shuffle ? 'text-sky-300' : ''}
+              onClick={onToggleShuffle}
+            >
+              <IconShuffle className="h-4 w-4" />
+            </Button>
             <Button variant="icon" aria-label="Previous track" disabled={!canNavigate} onClick={onPrevious}>
               <IconSkipBack className="h-5 w-5" />
             </Button>
@@ -72,18 +109,43 @@ export function PlayerBar({ canNavigate, onNext, onPrevious }: PlayerBarProps) {
             <Button variant="icon" aria-label="Next track" disabled={!canNavigate} onClick={onNext}>
               <IconSkipForward className="h-5 w-5" />
             </Button>
+            <Button
+              variant="icon"
+              aria-label={REPEAT_LABEL[repeatMode]}
+              aria-pressed={repeatMode !== 'off'}
+              className={repeatMode !== 'off' ? 'text-sky-300' : ''}
+              onClick={onCycleRepeat}
+            >
+              {repeatMode === 'one' ? <IconRepeatOne className="h-4 w-4" /> : <IconRepeat className="h-4 w-4" />}
+            </Button>
           </div>
 
-          <div className="hidden min-w-0 flex-1 items-center justify-end gap-2 md:flex">
-            <IconVolume className="h-4 w-4 shrink-0 text-sky-400/50" />
+          <div className="hidden min-w-0 flex-1 items-center justify-end gap-1 md:flex">
+            <Button
+              variant="icon"
+              aria-label={volume === 0 ? 'Unmute' : 'Mute'}
+              aria-pressed={volume === 0}
+              className="h-8 w-8"
+              onClick={toggleMute}
+            >
+              {volume === 0 ? <IconVolumeMuted className="h-4 w-4" /> : <IconVolume className="h-4 w-4" />}
+            </Button>
             {volumeSlider}
           </div>
         </div>
 
         <div className="mt-2 space-y-2 sm:hidden">
           <SeekBar />
-          <div className="flex items-center gap-2">
-            <IconVolume className="h-4 w-4 shrink-0 text-sky-400/50" />
+          <div className="flex items-center gap-1">
+            <Button
+              variant="icon"
+              aria-label={volume === 0 ? 'Unmute' : 'Mute'}
+              aria-pressed={volume === 0}
+              className="h-8 w-8"
+              onClick={toggleMute}
+            >
+              {volume === 0 ? <IconVolumeMuted className="h-4 w-4" /> : <IconVolume className="h-4 w-4" />}
+            </Button>
             {volumeSlider}
           </div>
         </div>

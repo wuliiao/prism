@@ -25,6 +25,10 @@ export function PlayerPage() {
     handleRemoveTrack,
     handleNext,
     handlePrevious,
+    shuffle,
+    repeatMode,
+    toggleShuffle,
+    cycleRepeat,
   } = usePlayerPage()
 
   return (
@@ -147,6 +151,10 @@ export function PlayerPage() {
         canNavigate={canNavigate}
         onNext={() => void handleNext()}
         onPrevious={() => void handlePrevious()}
+        shuffle={shuffle}
+        repeatMode={repeatMode}
+        onToggleShuffle={toggleShuffle}
+        onCycleRepeat={cycleRepeat}
       />
     </div>
   )

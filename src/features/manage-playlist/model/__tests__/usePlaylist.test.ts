@@ -98,4 +98,48 @@ describe('usePlaylist', () => {
     expect(onDroppedLocalTracks).toHaveBeenCalledTimes(1)
     expect(JSON.parse(String(localStorage.getItem('prism-playlist')))).toEqual([mockTrack])
   })
+
+  it('does not wrap to the first track when repeat is off', () => {
+    localStorage.setItem('prism-repeat', 'off')
+    const { result } = renderHook(() => usePlaylist())
+
+    act(() => {
+      result.current.addTracks([mockTrack, mockTrackTwo])
+      result.current.selectTrack(mockTrackTwo)
+    })
+
+    act(() => {
+      expect(result.current.playNext()).toBeNull()
+    })
+  })
+
+  it('replays the current track when repeat is one', () => {
+    localStorage.setItem('prism-repeat', 'one')
+    const { result } = renderHook(() => usePlaylist())
+
+    act(() => {
+      result.current.addTracks([mockTrack, mockTrackTwo])
+      result.current.selectTrack(mockTrack)
+    })
+
+    act(() => {
+      expect(result.current.playOnEnded()?.id).toBe(mockTrack.id)
+    })
+  })
+
+  it('picks another track when shuffle is on', () => {
+    localStorage.setItem('prism-shuffle', 'true')
+    jest.spyOn(Math, 'random').mockReturnValue(0.9)
+    const { result } = renderHook(() => usePlaylist())
+
+    act(() => {
+      result.current.addTracks([mockTrack, mockTrackTwo])
+      result.current.selectTrack(mockTrack)
+    })
+
+    act(() => {
+      expect(result.current.playNext()?.id).toBe(mockTrackTwo.id)
+    })
+    jest.restoreAllMocks()
+  })
 })

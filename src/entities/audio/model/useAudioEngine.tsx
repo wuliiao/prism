@@ -32,6 +32,7 @@ interface AudioEngineContextValue {
   toggle: () => void
   seek: (seconds: number) => void
   setVolume: (value: number) => void
+  toggleMute: () => void
   clearError: () => void
   registerOnTrackEnded: (handler: () => void) => () => void
 }
@@ -67,6 +68,9 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const [duration, setDuration] = useState(0)
   const [volume, setVolumeState] = useState(() => readStoredVolume())
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null)
+  const lastAudibleVolumeRef = useRef(readStoredVolume() || 0.8)
+  const volumeRef = useRef(volume)
+  volumeRef.current = volume
 
   useEffect(() => {
     const engine = new AudioEngine()
@@ -213,14 +217,25 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const setVolume = useCallback((value: number) => {
-    engineRef.current?.setVolume(value)
-    setVolumeState(value)
+    const next = Math.min(1, Math.max(0, value))
+    engineRef.current?.setVolume(next)
+    setVolumeState(next)
+    if (next > 0) lastAudibleVolumeRef.current = next
     try {
-      localStorage.setItem(VOLUME_STORAGE_KEY, String(value))
+      localStorage.setItem(VOLUME_STORAGE_KEY, String(next))
     } catch {
       // ignore storage failures for volume
     }
   }, [])
+
+  const toggleMute = useCallback(() => {
+    if (volumeRef.current > 0) {
+      lastAudibleVolumeRef.current = volumeRef.current
+      setVolume(0)
+      return
+    }
+    setVolume(lastAudibleVolumeRef.current || 0.8)
+  }, [setVolume])
 
   const clearError = useCallback(() => setError(null), [])
 
@@ -249,6 +264,7 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
       toggle,
       seek,
       setVolume,
+      toggleMute,
       clearError,
       registerOnTrackEnded,
     }),
@@ -267,6 +283,7 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
       toggle,
       seek,
       setVolume,
+      toggleMute,
       clearError,
       registerOnTrackEnded,
     ],
