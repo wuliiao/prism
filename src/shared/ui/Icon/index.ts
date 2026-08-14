@@ -4,9 +4,13 @@ export {
   IconSkipBack,
   IconSkipForward,
   IconVolume,
+  IconVolumeMuted,
   IconUpload,
   IconMusic,
   IconPlus,
   IconCheck,
   IconClose,
+  IconShuffle,
+  IconRepeat,
+  IconRepeatOne,
 } from './Icons'

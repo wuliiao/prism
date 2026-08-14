@@ -76,4 +76,26 @@ describe('useAudioEngine', () => {
     expect(result.current.currentTime).toBe(42)
     expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled()
   })
+
+  it('toggles mute and restores the previous volume', async () => {
+    const { result } = renderHook(() => useAudioEngine(), { wrapper })
+
+    await act(async () => {
+      await result.current.loadTrack(track)
+    })
+    act(() => {
+      result.current.setVolume(0.4)
+    })
+    act(() => {
+      result.current.toggleMute()
+    })
+
+    expect(result.current.volume).toBe(0)
+
+    act(() => {
+      result.current.toggleMute()
+    })
+
+    expect(result.current.volume).toBe(0.4)
+  })
 })

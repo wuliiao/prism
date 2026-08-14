@@ -4,6 +4,9 @@ interface KeyboardShortcutsOptions {
   onTogglePlay: () => void
   onSeekBackward: () => void
   onSeekForward: () => void
+  onNext?: () => void
+  onPrevious?: () => void
+  onMute?: () => void
   enabled?: boolean
 }
 
@@ -11,6 +14,9 @@ export function useKeyboardShortcuts({
   onTogglePlay,
   onSeekBackward,
   onSeekForward,
+  onNext,
+  onPrevious,
+  onMute,
   enabled = true,
 }: KeyboardShortcutsOptions): void {
   useEffect(() => {
@@ -29,11 +35,17 @@ export function useKeyboardShortcuts({
           break
         case 'ArrowLeft':
           event.preventDefault()
-          onSeekBackward()
+          if (event.shiftKey) onPrevious?.()
+          else onSeekBackward()
           break
         case 'ArrowRight':
           event.preventDefault()
-          onSeekForward()
+          if (event.shiftKey) onNext?.()
+          else onSeekForward()
+          break
+        case 'KeyM':
+          event.preventDefault()
+          onMute?.()
           break
         default:
           break
@@ -42,5 +54,5 @@ export function useKeyboardShortcuts({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [enabled, onSeekBackward, onSeekForward, onTogglePlay])
+  }, [enabled, onMute, onNext, onPrevious, onSeekBackward, onSeekForward, onTogglePlay])
 }

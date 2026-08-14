@@ -3,6 +3,11 @@ import type { Track } from '@entities/track'
 
 const STORAGE_KEY = 'prism-playlist'
 const INDEX_STORAGE_KEY = 'prism-playlist-index'
+const REPEAT_STORAGE_KEY = 'prism-repeat'
+const SHUFFLE_STORAGE_KEY = 'prism-shuffle'
+
+export type AddTrackResult = 'added' | 'exists'
+export type RepeatMode = 'off' | 'all' | 'one'
 
 function readStoredIndex(tracks: Track[]): number {
   try {
@@ -16,7 +21,32 @@ function readStoredIndex(tracks: Track[]): number {
   }
 }
 
-export type AddTrackResult = 'added' | 'exists'
+function readStoredRepeat(): RepeatMode {
+  try {
+    const raw = localStorage.getItem(REPEAT_STORAGE_KEY)
+    if (raw === 'off' || raw === 'all' || raw === 'one') return raw
+  } catch {
+    // ignore quota / private mode
+  }
+  return 'all'
+}
+
+function readStoredShuffle(): boolean {
+  try {
+    return localStorage.getItem(SHUFFLE_STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+function pickShuffledIndex(length: number, currentIndex: number): number {
+  if (length <= 1) return 0
+  let next = currentIndex
+  while (next === currentIndex) {
+    next = Math.floor(Math.random() * length)
+  }
+  return next
+}
 
 interface UsePlaylistOptions {
   onStorageError?: () => void
@@ -49,6 +79,8 @@ export function usePlaylist(options?: UsePlaylistOptions) {
   const notifiedDropRef = useRef(false)
   const [tracks, setTracks] = useState<Track[]>(() => restoredRef.current.tracks)
   const [currentIndex, setCurrentIndex] = useState(() => readStoredIndex(restoredRef.current.tracks))
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>(readStoredRepeat)
+  const [shuffle, setShuffle] = useState(readStoredShuffle)
 
   useEffect(() => {
     try {
@@ -57,6 +89,22 @@ export function usePlaylist(options?: UsePlaylistOptions) {
       // ignore quota / private mode
     }
   }, [currentIndex])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(REPEAT_STORAGE_KEY, repeatMode)
+    } catch {
+      // ignore quota / private mode
+    }
+  }, [repeatMode])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SHUFFLE_STORAGE_KEY, String(shuffle))
+    } catch {
+      // ignore quota / private mode
+    }
+  }, [shuffle])
 
   const persist = useCallback((next: Track[]) => {
     try {
@@ -163,19 +211,57 @@ export function usePlaylist(options?: UsePlaylistOptions) {
     [tracks],
   )
 
+  const cycleRepeat = useCallback(() => {
+    setRepeatMode((current) => (current === 'off' ? 'all' : current === 'all' ? 'one' : 'off'))
+  }, [])
+
+  const toggleShuffle = useCallback(() => {
+    setShuffle((current) => !current)
+  }, [])
+
   const playNext = useCallback((): Track | null => {
     if (tracks.length === 0) return null
-    const nextIndex = currentIndex < tracks.length - 1 ? currentIndex + 1 : 0
-    setCurrentIndex(nextIndex)
-    return tracks[nextIndex] ?? null
-  }, [tracks, currentIndex])
+
+    if (shuffle && tracks.length > 1) {
+      const nextIndex = pickShuffledIndex(tracks.length, currentIndex)
+      setCurrentIndex(nextIndex)
+      return tracks[nextIndex] ?? null
+    }
+
+    if (currentIndex < tracks.length - 1) {
+      const nextIndex = currentIndex + 1
+      setCurrentIndex(nextIndex)
+      return tracks[nextIndex] ?? null
+    }
+
+    if (repeatMode === 'off') return null
+
+    setCurrentIndex(0)
+    return tracks[0] ?? null
+  }, [tracks, currentIndex, shuffle, repeatMode])
 
   const playPrevious = useCallback((): Track | null => {
     if (tracks.length === 0) return null
-    const prevIndex = currentIndex > 0 ? currentIndex - 1 : tracks.length - 1
-    setCurrentIndex(prevIndex)
-    return tracks[prevIndex] ?? null
-  }, [tracks, currentIndex])
+
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1
+      setCurrentIndex(prevIndex)
+      return tracks[prevIndex] ?? null
+    }
+
+    if (repeatMode === 'off') return null
+
+    const lastIndex = tracks.length - 1
+    setCurrentIndex(lastIndex)
+    return tracks[lastIndex] ?? null
+  }, [tracks, currentIndex, repeatMode])
+
+  const playOnEnded = useCallback((): Track | null => {
+    if (repeatMode === 'one') {
+      return currentIndex >= 0 ? tracks[currentIndex] ?? null : null
+    }
+    return playNext()
+  }, [repeatMode, currentIndex, tracks, playNext])
 
   const currentTrack = currentIndex >= 0 ? tracks[currentIndex] ?? null : null
 
@@ -192,5 +278,10 @@ export function usePlaylist(options?: UsePlaylistOptions) {
     isInPlaylist,
     playNext,
     playPrevious,
+    playOnEnded,
+    repeatMode,
+    shuffle,
+    cycleRepeat,
+    toggleShuffle,
   }
 }

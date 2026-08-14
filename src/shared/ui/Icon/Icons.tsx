@@ -79,3 +79,43 @@ export function IconClose({ className = 'h-4 w-4' }: IconProps) {
     </svg>
   )
 }
+
+export function IconVolumeMuted({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M11 4.702a1 1 0 0 1 1.73-.73l4.5 4.5H20a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-2.77l-4.5 4.5A1 1 0 0 1 11 19.298V4.702ZM4 9a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h1V9H4Z" />
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        d="M3 3l18 18"
+      />
+    </svg>
+  )
+}
+
+export function IconShuffle({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 3h5v5M4 7h4l10 10h2M16 16h5v5M4 17h4l2-2" />
+    </svg>
+  )
+}
+
+export function IconRepeat({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 2l4 4-4 4M3 12V8a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 12v4a4 4 0 0 1-4 4H3" />
+    </svg>
+  )
+}
+
+export function IconRepeatOne({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 2l4 4-4 4M3 12V8a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 12v4a4 4 0 0 1-4 4H3" />
+      <path strokeLinecap="round" d="M12 9v6" />
+    </svg>
+  )
+}
