@@ -37,27 +37,10 @@ body {
     linear-gradient(180deg, #050a14 0%, #071018 50%, #050a14 100%);
   color: #e0f2fe;
   -webkit-font-smoothing: antialiased;
-  position: relative;
-}
-
-body::before {
-  content: '';
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  opacity: 0.35;
-  background-image:
-    linear-gradient(rgb(56 189 248 / 6%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(56 189 248 / 6%) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 85% 70% at 50% 40%, black 20%, transparent 75%);
 }
 
 #root {
   min-height: 100vh;
-  position: relative;
-  z-index: 1;
 }
 
 code {
