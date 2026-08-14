@@ -76,7 +76,7 @@ export function TrackItem({
         <button
           type="button"
           aria-label={`${actionLabel} ${track.title}`}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-400 opacity-0 transition group-hover:opacity-100 hover:bg-violet-500/20 hover:text-violet-300"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-300 transition hover:bg-violet-500/25"
           onClick={() => onSelect?.(track)}
         >
           <IconPlus />

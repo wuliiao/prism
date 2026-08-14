@@ -4,13 +4,16 @@ import { useAudioEngine } from '@entities/audio'
 import { usePlaylist } from '@features/manage-playlist'
 import { UploadTrackButton } from '@features/upload-track'
 import { IconMusic } from '@shared/ui/Icon'
+import { useToast } from '@shared/ui/Toast'
 import { AudioVisualizer } from '@widgets/audio-visualizer'
 import { PlayerBar } from '@widgets/player-bar'
 import { PlaylistPanel } from '@widgets/playlist-panel'
 import { TrackSearchPanel } from '@widgets/track-search'
 
 export function PlayerPage() {
-  const { loadTrack, currentTrack, isPlaying } = useAudioEngine()
+  const { loadTrack, currentTrack, isPlaying, isLoading, error, clearError, registerOnTrackEnded } =
+    useAudioEngine()
+  const { showToast } = useToast()
   const {
     tracks,
     addTrack,
@@ -30,17 +33,20 @@ export function PlayerPage() {
   )
 
   const handleAddTrack = useCallback(
-    (track: Track) => {
+    async (track: Track) => {
       addTrack(track)
+      await playTrack(track)
+      showToast(`Now playing: ${track.title}`, 'success')
     },
-    [addTrack],
+    [addTrack, playTrack, showToast],
   )
 
   const handleUpload = useCallback(
     async (track: Track) => {
       await playTrack(track)
+      showToast(`Uploaded: ${track.title}`, 'success')
     },
-    [playTrack],
+    [playTrack, showToast],
   )
 
   const handleNext = useCallback(async () => {
@@ -54,18 +60,20 @@ export function PlayerPage() {
   }, [loadTrack, playPrevious])
 
   useEffect(() => {
-    const onEnded = async () => {
-      const next = playNext()
-      if (next) await loadTrack(next)
-    }
+    return registerOnTrackEnded(() => {
+      void (async () => {
+        const next = playNext()
+        if (next) await loadTrack(next)
+      })()
+    })
+  }, [loadTrack, playNext, registerOnTrackEnded])
 
-    const engineEndedHandler = () => {
-      void onEnded()
+  useEffect(() => {
+    if (error) {
+      showToast(error, 'error')
+      clearError()
     }
-
-    window.addEventListener('harmony-hub:track-ended', engineEndedHandler)
-    return () => window.removeEventListener('harmony-hub:track-ended', engineEndedHandler)
-  }, [loadTrack, playNext])
+  }, [clearError, error, showToast])
 
   return (
     <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-36 pt-6 sm:px-6 sm:pt-8">
@@ -86,19 +94,26 @@ export function PlayerPage() {
 
       <section className="mb-8 grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
         <div className="flex flex-col items-center gap-4 lg:items-start">
-          {currentTrack?.coverUrl ? (
-            <img
-              src={currentTrack.coverUrl}
-              alt=""
-              className={`aspect-square w-full max-w-[280px] rounded-2xl object-cover shadow-2xl shadow-black/50 ring-1 ring-white/10 transition ${
-                isPlaying ? 'scale-[1.02]' : ''
-              }`}
-            />
-          ) : (
-            <div className="flex aspect-square w-full max-w-[280px] items-center justify-center rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 shadow-2xl ring-1 ring-white/10">
-              <IconMusic className="h-16 w-16 text-zinc-600" />
-            </div>
-          )}
+          <div className="relative aspect-square w-full max-w-[280px]">
+            {currentTrack?.coverUrl ? (
+              <img
+                src={currentTrack.coverUrl}
+                alt=""
+                className={`h-full w-full rounded-2xl object-cover shadow-2xl shadow-black/50 ring-1 ring-white/10 transition ${
+                  isPlaying ? 'scale-[1.02]' : ''
+                } ${isLoading ? 'opacity-60' : ''}`}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 shadow-2xl ring-1 ring-white/10">
+                <IconMusic className="h-16 w-16 text-zinc-600" />
+              </div>
+            )}
+            {isLoading ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-violet-400" />
+              </div>
+            ) : null}
+          </div>
           <div className="w-full text-center lg:text-left">
             <p className="truncate text-lg font-semibold text-zinc-100">
               {currentTrack?.title ?? 'Ready when you are'}
@@ -133,7 +148,11 @@ export function PlayerPage() {
         />
       </div>
 
-      <PlayerBar onNext={() => void handleNext()} onPrevious={() => void handlePrevious()} />
+      <PlayerBar
+        canNavigate={tracks.length > 0}
+        onNext={() => void handleNext()}
+        onPrevious={() => void handlePrevious()}
+      />
     </div>
   )
 }

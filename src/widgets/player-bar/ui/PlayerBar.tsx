@@ -6,11 +6,12 @@ import { Slider } from '@shared/ui/Slider'
 import { Button } from '@shared/ui/Button'
 
 interface PlayerBarProps {
+  canNavigate: boolean
   onNext: () => void
   onPrevious: () => void
 }
 
-export function PlayerBar({ onNext, onPrevious }: PlayerBarProps) {
+export function PlayerBar({ canNavigate, onNext, onPrevious }: PlayerBarProps) {
   const { currentTrack, volume, setVolume } = useAudioEngine()
 
   return (
@@ -44,11 +45,11 @@ export function PlayerBar({ onNext, onPrevious }: PlayerBarProps) {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
-            <Button variant="icon" aria-label="Previous track" onClick={onPrevious}>
+            <Button variant="icon" aria-label="Previous track" disabled={!canNavigate} onClick={onPrevious}>
               <IconSkipBack className="h-5 w-5" />
             </Button>
             <PlayPauseButton />
-            <Button variant="icon" aria-label="Next track" onClick={onNext}>
+            <Button variant="icon" aria-label="Next track" disabled={!canNavigate} onClick={onNext}>
               <IconSkipForward className="h-5 w-5" />
             </Button>
           </div>
