@@ -39,7 +39,7 @@ export function PlayerBar({ canNavigate, onNext, onPrevious }: PlayerBarProps) {
             {currentTrack?.coverUrl ? (
               <img
                 src={currentTrack.coverUrl}
-                alt=""
+                alt={currentTrack.title}
                 className="h-10 w-10 shrink-0 rounded-lg object-cover shadow-lg ring-1 ring-white/10 sm:h-12 sm:w-12"
               />
             ) : (
