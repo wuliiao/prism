@@ -7,9 +7,10 @@ export function PlayPauseButton() {
 
   return (
     <Button
+      variant="icon"
       aria-label={isPlaying ? 'Pause' : 'Play'}
       aria-pressed={isPlaying}
-      className="h-12 w-12 rounded-full bg-white text-zinc-900 shadow-xl shadow-black/30 hover:bg-zinc-100 hover:scale-105 active:scale-95"
+      className="h-12 w-12 shrink-0 border-0 bg-white text-zinc-900 shadow-xl shadow-black/30 hover:scale-105 hover:bg-zinc-100 hover:text-zinc-900 active:scale-95"
       disabled={!currentTrack || isLoading}
       onClick={() => void toggle()}
     >
@@ -18,7 +19,7 @@ export function PlayPauseButton() {
       ) : isPlaying ? (
         <IconPause className="h-5 w-5" />
       ) : (
-        <IconPlay className="h-5 w-5 translate-x-0.5" />
+        <IconPlay className="h-5 w-5" />
       )}
     </Button>
   )
