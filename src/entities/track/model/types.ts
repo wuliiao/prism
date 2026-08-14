@@ -18,6 +18,11 @@ export interface JamendoTrackResponse {
   duration: number
   audio: string
   album_image: string
+  musicinfo?: {
+    tags?: {
+      genres?: string[]
+    }
+  }
 }
 
 export interface JamendoApiResponse {

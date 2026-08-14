@@ -4,7 +4,7 @@
 
 ## Features
 
-- Load royalty-free tracks from Jamendo by tag/search
+- Load royalty-free tracks from Jamendo by title, artist, or mood
 - Upload local audio files
 - Real-time frequency visualizer on Canvas (Web Audio API)
 - Playlist management with `localStorage` persistence

@@ -1,5 +1,10 @@
 import type { JamendoTrackResponse, Track } from './types'
 
+function mapGenre(raw: JamendoTrackResponse): string | undefined {
+  const genre = raw.musicinfo?.tags?.genres?.[0]
+  return genre ? genre.toLowerCase() : undefined
+}
+
 export function mapJamendoTrack(raw: JamendoTrackResponse): Track {
   return {
     id: `jamendo-${raw.id}`,
@@ -9,6 +14,7 @@ export function mapJamendoTrack(raw: JamendoTrackResponse): Track {
     audioUrl: raw.audio,
     coverUrl: raw.album_image,
     source: 'jamendo',
+    genre: mapGenre(raw),
   }
 }
 
