@@ -5,13 +5,14 @@ import { usePlaylist } from '@features/manage-playlist'
 import { UploadTrackButton } from '@features/upload-track'
 import { IconMusic } from '@shared/ui/Icon'
 import { useToast } from '@shared/ui/Toast'
+import { useKeyboardShortcuts } from '@shared/lib/useKeyboardShortcuts'
 import { AudioVisualizer } from '@widgets/audio-visualizer'
 import { PlayerBar } from '@widgets/player-bar'
 import { PlaylistPanel } from '@widgets/playlist-panel'
 import { TrackSearchPanel } from '@widgets/track-search'
 
 export function PlayerPage() {
-  const { loadTrack, currentTrack, isPlaying, isLoading, error, clearError, registerOnTrackEnded } =
+  const { loadTrack, currentTrack, isPlaying, isLoading, error, clearError, registerOnTrackEnded, toggle, seek, currentTime } =
     useAudioEngine()
   const { showToast } = useToast()
   const {
@@ -81,8 +82,20 @@ export function PlayerPage() {
     }
   }, [clearError, error, showToast])
 
+  useKeyboardShortcuts({
+    onTogglePlay: () => void toggle(),
+    onSeekBackward: () => seek(Math.max(0, currentTime - 5)),
+    onSeekForward: () => seek(currentTime + 5),
+    enabled: Boolean(currentTrack),
+  })
+
   return (
     <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-36 pt-6 sm:px-6 sm:pt-8">
+      <p className="sr-only" aria-live="polite">
+        {currentTrack
+          ? `${isPlaying ? 'Playing' : 'Paused'}: ${currentTrack.title} by ${currentTrack.artist}`
+          : 'No track selected'}
+      </p>
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/30">
