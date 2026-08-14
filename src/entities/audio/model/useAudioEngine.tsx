@@ -8,11 +8,11 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import type { Track } from '@entities/track'
 import { AudioEngine } from './AudioEngine'
+import type { PlayingMedia } from './types'
 
 interface AudioEngineContextValue {
-  currentTrack: Track | null
+  currentTrack: PlayingMedia | null
   isPlaying: boolean
   isLoading: boolean
   error: string | null
@@ -20,7 +20,7 @@ interface AudioEngineContextValue {
   duration: number
   volume: number
   analyser: AnalyserNode | null
-  loadTrack: (track: Track) => Promise<void>
+  loadTrack: (track: PlayingMedia) => Promise<void>
   play: () => Promise<void>
   pause: () => void
   toggle: () => void
@@ -53,7 +53,7 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const onTrackEndedRef = useRef<(() => void) | null>(null)
   const activeBlobUrlRef = useRef<string | null>(null)
   const loadRequestRef = useRef(0)
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(null)
+  const [currentTrack, setCurrentTrack] = useState<PlayingMedia | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -90,7 +90,7 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const loadTrack = useCallback(async (track: Track) => {
+  const loadTrack = useCallback(async (track: PlayingMedia) => {
     const engine = engineRef.current
     if (!engine) return
 
@@ -109,7 +109,7 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
     setError(null)
 
     try {
-      await engine.loadTrack(track)
+      await engine.load(track.audioUrl)
       if (requestId !== loadRequestRef.current) return
 
       setCurrentTrack(track)

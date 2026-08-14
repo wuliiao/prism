@@ -1,4 +1,4 @@
-import { env } from '@shared/config/env'
+import { env } from '@shared/config'
 import type { JamendoApiResponse, Track } from '@entities/track'
 import { mapJamendoTrack } from '@entities/track'
 

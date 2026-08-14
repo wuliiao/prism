@@ -3,7 +3,7 @@ import type { Track } from '@entities/track'
 import { useAudioEngine } from '@entities/audio'
 import { usePlaylist } from '@features/manage-playlist'
 import { useToast } from '@shared/ui/Toast'
-import { useKeyboardShortcuts } from '@shared/lib/useKeyboardShortcuts'
+import { useKeyboardShortcuts } from '@shared/lib'
 
 export function usePlayerPage() {
   const { loadTrack, currentTrack, isPlaying, isLoading, error, clearError, registerOnTrackEnded, toggle, seek, currentTime } =

@@ -1,13 +1,10 @@
-import { ToastProvider } from '@shared/ui/Toast'
-import { AudioEngineProvider } from '@entities/audio'
+import { AppProviders } from './providers/AppProviders'
 import { PlayerPage } from '@pages/player'
 
 export function App() {
   return (
-    <ToastProvider>
-      <AudioEngineProvider>
-        <PlayerPage />
-      </AudioEngineProvider>
-    </ToastProvider>
+    <AppProviders>
+      <PlayerPage />
+    </AppProviders>
   )
 }

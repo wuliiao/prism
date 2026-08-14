@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Track } from '@entities/track'
 import { TrackItem } from '@entities/track'
 import { useJamendoTracks } from '@features/load-jamendo-tracks'
-import { isJamendoConfigured } from '@shared/config/env'
+import { isJamendoConfigured } from '@shared/config'
 import { Button } from '@shared/ui/Button'
 
 interface TrackSearchPanelProps {
