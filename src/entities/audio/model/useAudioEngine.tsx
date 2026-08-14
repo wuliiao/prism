@@ -10,6 +10,12 @@ import {
 } from 'react'
 import { AudioEngine } from './AudioEngine'
 import type { PlayingMedia } from './types'
+import { readStoredPlayback, writeStoredPlayback } from './playbackStorage'
+
+interface LoadTrackOptions {
+  autoplay?: boolean
+  startAt?: number
+}
 
 interface AudioEngineContextValue {
   currentTrack: PlayingMedia | null
@@ -20,7 +26,7 @@ interface AudioEngineContextValue {
   duration: number
   volume: number
   analyser: AnalyserNode | null
-  loadTrack: (track: PlayingMedia) => Promise<void>
+  loadTrack: (track: PlayingMedia, options?: LoadTrackOptions) => Promise<void>
   play: () => Promise<void>
   pause: () => void
   toggle: () => void
@@ -53,6 +59,9 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const onTrackEndedRef = useRef<(() => void) | null>(null)
   const activeBlobUrlRef = useRef<string | null>(null)
   const loadRequestRef = useRef(0)
+  const lastPersistAtRef = useRef(0)
+  const currentTrackRef = useRef<PlayingMedia | null>(null)
+  const currentTimeRef = useRef(0)
   const [currentTrack, setCurrentTrack] = useState<PlayingMedia | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -69,8 +78,15 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
     setAnalyser(engine.getAnalyser())
 
     engine.onTimeUpdate = (time) => {
+      currentTimeRef.current = time
       setCurrentTime(time)
       setIsPlaying(!engine.isPaused())
+
+      const now = Date.now()
+      if (now - lastPersistAtRef.current >= 2000) {
+        lastPersistAtRef.current = now
+        writeStoredPlayback(currentTrackRef.current, time)
+      }
     }
     engine.onEnded = () => {
       setIsPlaying(false)
@@ -90,11 +106,13 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const loadTrack = useCallback(async (track: PlayingMedia) => {
+  const loadTrack = useCallback(async (track: PlayingMedia, options?: LoadTrackOptions) => {
     const engine = engineRef.current
     if (!engine) return
 
     const requestId = ++loadRequestRef.current
+    const autoplay = options?.autoplay !== false
+    const startAt = options?.startAt ?? 0
 
     if (activeBlobUrlRef.current && activeBlobUrlRef.current !== track.audioUrl) {
       URL.revokeObjectURL(activeBlobUrlRef.current)
@@ -112,10 +130,25 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
       await engine.load(track.audioUrl)
       if (requestId !== loadRequestRef.current) return
 
+      currentTrackRef.current = track
       setCurrentTrack(track)
-      setCurrentTime(0)
+      if (startAt > 0) {
+        engine.seek(startAt)
+        currentTimeRef.current = startAt
+        setCurrentTime(startAt)
+      } else {
+        currentTimeRef.current = 0
+        setCurrentTime(0)
+      }
       setDuration(track.duration || engine.getDuration())
       setAnalyser(engine.getAnalyser())
+      writeStoredPlayback(track, startAt)
+
+      if (!autoplay) {
+        setIsPlaying(false)
+        return
+      }
+
       await engine.play()
       if (requestId !== loadRequestRef.current) return
 
@@ -130,6 +163,18 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
         setIsLoading(false)
       }
     }
+  }, [])
+
+  useEffect(() => {
+    const stored = readStoredPlayback()
+    if (!stored) return
+    void loadTrack(stored.track, { autoplay: false, startAt: stored.currentTime })
+  }, [loadTrack])
+
+  useEffect(() => {
+    const persist = () => writeStoredPlayback(currentTrackRef.current, currentTimeRef.current)
+    window.addEventListener('pagehide', persist)
+    return () => window.removeEventListener('pagehide', persist)
   }, [])
 
   const play = useCallback(async () => {
@@ -149,6 +194,7 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const pause = useCallback(() => {
     engineRef.current?.pause()
     setIsPlaying(false)
+    writeStoredPlayback(currentTrackRef.current, currentTimeRef.current)
   }, [])
 
   const toggle = useCallback(async () => {
@@ -164,7 +210,9 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
 
   const seek = useCallback((seconds: number) => {
     engineRef.current?.seek(seconds)
+    currentTimeRef.current = seconds
     setCurrentTime(seconds)
+    writeStoredPlayback(currentTrackRef.current, seconds)
   }, [])
 
   const setVolume = useCallback((value: number) => {

@@ -159,6 +159,14 @@ export function usePlayerPage() {
     }
   }, [clearError, error, showToast])
 
+  useEffect(() => {
+    if (!currentTrack) return
+    isPlaylistPlaybackRef.current = isInPlaylist(currentTrack.id)
+    if (isInPlaylist(currentTrack.id)) {
+      selectTrack(currentTrack)
+    }
+  }, [currentTrack, isInPlaylist, selectTrack])
+
   useKeyboardShortcuts({
     onTogglePlay: () => void toggle(),
     onSeekBackward: () => seek(Math.max(0, currentTime - 5)),
