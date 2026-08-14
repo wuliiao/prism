@@ -13,7 +13,7 @@ export class AudioEngine {
   constructor() {
     this.audio = new Audio()
     this.audio.crossOrigin = 'anonymous'
-    this.audio.preload = 'metadata'
+    this.audio.preload = 'auto'
 
     this.audio.addEventListener('timeupdate', () => {
       this.onTimeUpdate?.(this.audio.currentTime)
@@ -44,11 +44,38 @@ export class AudioEngine {
     this.sourceNode.connect(this.analyser!)
   }
 
+  private waitForCanPlay(): Promise<void> {
+    if (this.audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      return Promise.resolve()
+    }
+
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        this.audio.removeEventListener('canplay', onCanPlay)
+        this.audio.removeEventListener('error', onError)
+      }
+
+      const onCanPlay = () => {
+        cleanup()
+        resolve()
+      }
+
+      const onError = () => {
+        cleanup()
+        reject(new Error('Failed to load audio'))
+      }
+
+      this.audio.addEventListener('canplay', onCanPlay)
+      this.audio.addEventListener('error', onError)
+    })
+  }
+
   async loadTrack(track: Track): Promise<void> {
     this.pause()
-    this.audio.src = track.audioUrl
     this.ensureSourceConnected()
+    this.audio.src = track.audioUrl
     this.audio.load()
+    await this.waitForCanPlay()
   }
 
   async play(): Promise<void> {
