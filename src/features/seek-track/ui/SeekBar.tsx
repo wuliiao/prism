@@ -15,6 +15,20 @@ export function SeekBar() {
     }
   }, [currentTime, isDragging])
 
+  useEffect(() => {
+    if (!isDragging) return
+
+    const stopDragging = () => setIsDragging(false)
+
+    window.addEventListener('pointerup', stopDragging)
+    window.addEventListener('pointercancel', stopDragging)
+
+    return () => {
+      window.removeEventListener('pointerup', stopDragging)
+      window.removeEventListener('pointercancel', stopDragging)
+    }
+  }, [isDragging])
+
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = Number(event.target.value)
@@ -38,8 +52,6 @@ export function SeekBar() {
         disabled={!currentTrack || safeDuration === 0}
         onChange={handleChange}
         onPointerDown={() => setIsDragging(true)}
-        onPointerUp={() => setIsDragging(false)}
-        onPointerLeave={() => setIsDragging(false)}
         className="flex-1"
       />
       <span className="w-10 text-xs tabular-nums text-zinc-400">
