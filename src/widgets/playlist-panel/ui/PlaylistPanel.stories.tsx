@@ -11,12 +11,31 @@ const tracks: Track[] = [
     audioUrl: '#',
     coverUrl: 'https://picsum.photos/seed/ocean/100',
     source: 'jamendo',
+    genre: 'chill',
   },
   {
     id: '2',
     title: 'Night City',
     artist: 'Synth Wave',
     duration: 240,
+    audioUrl: '#',
+    source: 'jamendo',
+    genre: 'electronic',
+  },
+  {
+    id: '3',
+    title: 'Midnight Jazz',
+    artist: 'Smooth Trio',
+    duration: 200,
+    audioUrl: '#',
+    source: 'jamendo',
+    genre: 'jazz',
+  },
+  {
+    id: '4',
+    title: 'My Upload',
+    artist: 'Local file',
+    duration: 160,
     audioUrl: '#',
     source: 'local',
   },
@@ -41,22 +60,21 @@ export const Empty: Story = {
   },
 }
 
-export const EmptyWithQuickAdd: Story = {
-  args: {
-    tracks: [],
-    currentTrack: null,
-    isPlaying: false,
-    onSelect: () => {},
-    onRemove: () => {},
-    onQuickAddGenre: (tag) => console.log('Quick add:', tag),
-  },
-}
-
 export const WithTracks: Story = {
   args: {
     tracks,
     currentTrack: tracks[0] ?? null,
     isPlaying: true,
+    onSelect: () => {},
+    onRemove: () => {},
+  },
+}
+
+export const WithGenreFilters: Story = {
+  args: {
+    tracks,
+    currentTrack: tracks[2] ?? null,
+    isPlaying: false,
     onSelect: () => {},
     onRemove: () => {},
   },

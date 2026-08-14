@@ -38,6 +38,11 @@ export function TrackSearchPanel({
     void search(query)
   }
 
+  const activeGenre = query.trim().toLowerCase()
+
+  const withGenre = (track: Track): Track =>
+    activeGenre ? { ...track, genre: activeGenre } : track
+
   if (!isJamendoConfigured()) {
     return (
       <section className="glass-panel flex h-full min-h-[420px] flex-col rounded-2xl p-5">
@@ -87,7 +92,7 @@ export function TrackSearchPanel({
 
       {tracks.length > 0 ? (
         <div className="mb-3">
-          <Button variant="ghost" className="w-full text-xs" disabled={isLoading} onClick={() => onAddAll(tracks)}>
+          <Button variant="ghost" className="w-full text-xs" disabled={isLoading} onClick={() => onAddAll(tracks.map(withGenre))}>
             Add all {tracks.length} tracks to playlist
           </Button>
         </div>
@@ -113,8 +118,8 @@ export function TrackSearchPanel({
           <li key={track.id}>
             <TrackItem
               track={track}
-              onPlay={onPreviewTrack}
-              onAdd={onAddTrack}
+              onPlay={(item) => onPreviewTrack(withGenre(item))}
+              onAdd={(item) => onAddTrack(withGenre(item))}
               onRemoveFromPlaylist={onRemoveFromPlaylist}
               actionLabel="Add"
               isInPlaylist={isInPlaylist(track.id)}

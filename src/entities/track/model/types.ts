@@ -8,6 +8,7 @@ export interface Track {
   audioUrl: string
   coverUrl?: string
   source: TrackSource
+  genre?: string
 }
 
 export interface JamendoTrackResponse {

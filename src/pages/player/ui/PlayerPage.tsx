@@ -1,10 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import type { Track } from '@entities/track'
 import { useAudioEngine } from '@entities/audio'
 import { usePlaylist } from '@features/manage-playlist'
-import { fetchJamendoTracks } from '@features/load-jamendo-tracks'
 import { UploadTrackButton } from '@features/upload-track'
-import { isJamendoConfigured } from '@shared/config/env'
 import { IconMusic, IconPlus } from '@shared/ui/Icon'
 import { useToast } from '@shared/ui/Toast'
 import { useKeyboardShortcuts } from '@shared/lib/useKeyboardShortcuts'
@@ -33,7 +31,6 @@ export function PlayerPage() {
 
   const isPlaylistPlaybackRef = useRef(true)
   const queuedAfterRemoveRef = useRef<Track | null>(null)
-  const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
 
   const playTrack = useCallback(
     async (track: Track) => {
@@ -91,31 +88,6 @@ export function PlayerPage() {
         showToast(`Added ${addedCount} track${addedCount === 1 ? '' : 's'} to playlist`, 'success')
       } else {
         showToast('All tracks are already in playlist', 'info')
-      }
-    },
-    [addTracks, showToast],
-  )
-
-  const handleQuickAddGenre = useCallback(
-    async (tag: string) => {
-      setIsQuickAddLoading(true)
-      try {
-        const results = await fetchJamendoTracks({ search: tag })
-        if (results.length === 0) {
-          showToast(`No ${tag} tracks found on Jamendo`, 'info')
-          return
-        }
-
-        const addedCount = addTracks(results)
-        if (addedCount > 0) {
-          showToast(`Added ${addedCount} ${tag} track${addedCount === 1 ? '' : 's'}`, 'success')
-        } else {
-          showToast(`All ${tag} tracks are already in playlist`, 'info')
-        }
-      } catch {
-        showToast(`Couldn't load ${tag} tracks from Jamendo`, 'error')
-      } finally {
-        setIsQuickAddLoading(false)
       }
     },
     [addTracks, showToast],
@@ -307,8 +279,6 @@ export function PlayerPage() {
           isPlaying={isPlaying}
           onSelect={(track) => void playTrack(track)}
           onRemove={(track) => handleRemoveTrack(track)}
-          onQuickAddGenre={isJamendoConfigured() ? handleQuickAddGenre : undefined}
-          isQuickAddLoading={isQuickAddLoading}
         />
       </div>
 
