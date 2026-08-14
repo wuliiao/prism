@@ -3,7 +3,6 @@ import type { Track } from '@entities/track'
 
 const STORAGE_KEY = 'prism-playlist'
 const INDEX_STORAGE_KEY = 'prism-playlist-index'
-const LEGACY_STORAGE_KEY = 'harmony-hub-playlist'
 
 function readStoredIndex(tracks: Track[]): number {
   try {
@@ -25,8 +24,7 @@ interface UsePlaylistOptions {
 
 function readStoredPlaylist(): Track[] {
   try {
-    const raw =
-      localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY)
+    const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     return JSON.parse(raw) as Track[]
   } catch {
