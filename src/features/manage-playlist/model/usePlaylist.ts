@@ -1,8 +1,21 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Track } from '@entities/track'
 
 const STORAGE_KEY = 'prism-playlist'
+const INDEX_STORAGE_KEY = 'prism-playlist-index'
 const LEGACY_STORAGE_KEY = 'harmony-hub-playlist'
+
+function readStoredIndex(tracks: Track[]): number {
+  try {
+    const raw = localStorage.getItem(INDEX_STORAGE_KEY)
+    if (raw == null) return -1
+    const index = Number(raw)
+    if (!Number.isInteger(index) || index < 0 || index >= tracks.length) return -1
+    return index
+  } catch {
+    return -1
+  }
+}
 
 export type AddTrackResult = 'added' | 'exists'
 
@@ -24,7 +37,15 @@ function readStoredPlaylist(): Track[] {
 export function usePlaylist(options?: UsePlaylistOptions) {
   const onStorageError = options?.onStorageError
   const [tracks, setTracks] = useState<Track[]>(() => readStoredPlaylist())
-  const [currentIndex, setCurrentIndex] = useState(-1)
+  const [currentIndex, setCurrentIndex] = useState(() => readStoredIndex(readStoredPlaylist()))
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(INDEX_STORAGE_KEY, String(currentIndex))
+    } catch {
+      // ignore quota / private mode
+    }
+  }, [currentIndex])
 
   const persist = useCallback((next: Track[]) => {
     try {
