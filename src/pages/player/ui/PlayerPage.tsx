@@ -112,6 +112,9 @@ export function PlayerPage() {
     enabled: Boolean(currentTrack),
   })
 
+  const isPreviewMode = Boolean(currentTrack && !isInPlaylist(currentTrack.id))
+  const canNavigate = tracks.length > 0 && !isPreviewMode
+
   return (
     <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-44 pt-6 sm:px-6 sm:pb-36 sm:pt-8">
       <p className="sr-only" aria-live="polite">
@@ -219,7 +222,7 @@ export function PlayerPage() {
       </div>
 
       <PlayerBar
-        canNavigate={tracks.length > 0}
+        canNavigate={canNavigate}
         onNext={() => void handleNext()}
         onPrevious={() => void handlePrevious()}
       />
