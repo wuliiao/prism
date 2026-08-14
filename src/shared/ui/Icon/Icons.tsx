@@ -58,8 +58,16 @@ export function IconMusic({ className = 'h-5 w-5' }: IconProps) {
 
 export function IconPlus({ className = 'h-4 w-4' }: IconProps) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+export function IconCheck({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
     </svg>
   )
 }
