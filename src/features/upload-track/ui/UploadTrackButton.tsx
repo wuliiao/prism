@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { createLocalTrack } from '@entities/track'
 import type { Track } from '@entities/track'
+import { IconUpload } from '@shared/ui/Icon'
 import { Button } from '@shared/ui/Button'
 
 interface UploadTrackButtonProps {
@@ -29,7 +30,8 @@ export function UploadTrackButton({ onUpload }: UploadTrackButtonProps) {
         onChange={handleChange}
       />
       <Button variant="ghost" onClick={() => inputRef.current?.click()}>
-        Upload track
+        <IconUpload className="h-4 w-4" />
+        Upload
       </Button>
     </>
   )

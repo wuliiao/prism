@@ -6,10 +6,11 @@ interface AudioVisualizerProps {
   height?: number
 }
 
-export function AudioVisualizer({ barCount = 64, height = 160 }: AudioVisualizerProps) {
+export function AudioVisualizer({ barCount = 72, height = 200 }: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { analyser, isPlaying } = useAudioEngine()
+  const { analyser, isPlaying, currentTrack } = useAudioEngine()
   const animationRef = useRef<number | null>(null)
+  const phaseRef = useRef(0)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -26,33 +27,63 @@ export function AudioVisualizer({ barCount = 64, height = 160 }: AudioVisualizer
 
       const width = canvas.width
       const canvasHeight = canvas.height
+      const centerY = canvasHeight / 2
 
       context.clearRect(0, 0, width, canvasHeight)
 
+      // subtle background glow
+      const bgGlow = context.createRadialGradient(
+        width / 2,
+        centerY,
+        0,
+        width / 2,
+        centerY,
+        width * 0.45,
+      )
+      bgGlow.addColorStop(0, 'rgb(139 92 246 / 12%)')
+      bgGlow.addColorStop(1, 'transparent')
+      context.fillStyle = bgGlow
+      context.fillRect(0, 0, width, canvasHeight)
+
       if (analyser && isPlaying) {
         analyser.getByteFrequencyData(dataArray)
+        phaseRef.current = 0
       } else {
-        dataArray.fill(0)
+        phaseRef.current += 0.04
+        for (let i = 0; i < bufferLength; i += 1) {
+          dataArray[i] = Math.sin(phaseRef.current + i * 0.15) * 18 + 22
+        }
       }
 
-      const gradient = context.createLinearGradient(0, 0, 0, canvasHeight)
-      gradient.addColorStop(0, '#a78bfa')
-      gradient.addColorStop(1, '#4c1d95')
-      context.fillStyle = gradient
-
       const step = Math.floor(bufferLength / barCount)
-      const gap = 2
+      const gap = 3
       const barWidth = width / barCount - gap
 
       for (let i = 0; i < barCount; i += 1) {
         const value = dataArray[i * step] ?? 0
-        const barHeight = (value / 255) * canvasHeight * 0.9
-        const x = i * (barWidth + gap)
-        const y = canvasHeight - barHeight
+        const normalized = value / 255
+        const barHeight = normalized * (canvasHeight * 0.42)
 
+        const x = i * (barWidth + gap)
+
+        const gradient = context.createLinearGradient(0, centerY - barHeight, 0, centerY + barHeight)
+        gradient.addColorStop(0, '#c4b5fd')
+        gradient.addColorStop(0.5, '#8b5cf6')
+        gradient.addColorStop(1, '#6d28d9')
+
+        context.fillStyle = gradient
+
+        // top bar
         context.beginPath()
-        context.roundRect(x, y, barWidth, barHeight, 2)
+        context.roundRect(x, centerY - barHeight, barWidth, barHeight, 2)
         context.fill()
+
+        // mirrored bottom bar
+        context.globalAlpha = 0.55
+        context.beginPath()
+        context.roundRect(x, centerY, barWidth, barHeight * 0.85, 2)
+        context.fill()
+        context.globalAlpha = 1
       }
     }
 
@@ -82,11 +113,18 @@ export function AudioVisualizer({ barCount = 64, height = 160 }: AudioVisualizer
   }, [height])
 
   return (
-    <canvas
-      ref={canvasRef}
-      aria-label="Audio visualizer"
-      className="w-full rounded-2xl bg-zinc-950/80"
-      style={{ height }}
-    />
+    <div className="relative overflow-hidden rounded-2xl ring-1 ring-white/10">
+      <canvas
+        ref={canvasRef}
+        aria-label="Audio visualizer"
+        className="block w-full bg-zinc-950/60"
+        style={{ height }}
+      />
+      {!currentTrack ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <p className="text-sm text-zinc-500">Select a track to start listening</p>
+        </div>
+      ) : null}
+    </div>
   )
 }

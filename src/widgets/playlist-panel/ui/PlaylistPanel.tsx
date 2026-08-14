@@ -1,5 +1,6 @@
 import type { Track } from '@entities/track'
 import { TrackItem } from '@entities/track'
+import { IconMusic } from '@shared/ui/Icon'
 
 interface PlaylistPanelProps {
   tracks: Track[]
@@ -17,18 +18,35 @@ export function PlaylistPanel({
   onRemove,
 }: PlaylistPanelProps) {
   return (
-    <section className="flex h-full flex-col rounded-2xl border border-white/10 bg-zinc-900/60 p-4">
+    <section className="glass-panel flex h-full min-h-[420px] flex-col rounded-2xl p-5">
       <header className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-zinc-100">Playlist</h2>
-        <span className="text-xs text-zinc-400">{tracks.length} tracks</span>
+        <div>
+          <h2 className="text-base font-semibold text-zinc-100">Your playlist</h2>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            {tracks.length === 0 ? 'Empty for now' : `${tracks.length} track${tracks.length === 1 ? '' : 's'}`}
+          </p>
+        </div>
+        {tracks.length > 0 ? (
+          <span className="rounded-full bg-violet-500/15 px-2.5 py-1 text-xs font-medium text-violet-300">
+            {tracks.length}
+          </span>
+        ) : null}
       </header>
 
       {tracks.length === 0 ? (
-        <p className="flex flex-1 items-center justify-center text-sm text-zinc-500">
-          Add tracks from Jamendo search or upload local files
-        </p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 text-zinc-500">
+            <IconMusic className="h-8 w-8" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-zinc-300">Nothing here yet</p>
+            <p className="mt-1 max-w-[220px] text-xs leading-relaxed text-zinc-500">
+              Browse Discover or upload a local file to build your queue
+            </p>
+          </div>
+        </div>
       ) : (
-        <ul className="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
+        <ul className="custom-scrollbar flex flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
           {tracks.map((track) => (
             <li key={track.id}>
               <TrackItem
