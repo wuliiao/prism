@@ -9,6 +9,7 @@ interface TrackItemProps {
   onSelect?: (track: Track) => void
   onRemove?: (track: Track) => void
   actionLabel?: string
+  isInPlaylist?: boolean
 }
 
 function EqualizerBars() {
@@ -28,6 +29,7 @@ export function TrackItem({
   onSelect,
   onRemove,
   actionLabel,
+  isInPlaylist = false,
 }: TrackItemProps) {
   const durationLabel =
     track.duration > 0 ? formatTime(track.duration) : null
@@ -73,14 +75,20 @@ export function TrackItem({
       </button>
 
       {actionLabel ? (
-        <button
-          type="button"
-          aria-label={`${actionLabel} ${track.title}`}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-300 transition hover:bg-violet-500/25"
-          onClick={() => onSelect?.(track)}
-        >
-          <IconPlus />
-        </button>
+        isInPlaylist ? (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-xs font-medium text-emerald-300">
+            ✓
+          </span>
+        ) : (
+          <button
+            type="button"
+            aria-label={`${actionLabel} ${track.title}`}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-300 transition hover:bg-violet-500/25"
+            onClick={() => onSelect?.(track)}
+          >
+            <IconPlus />
+          </button>
+        )
       ) : null}
 
       {onRemove ? (
