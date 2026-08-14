@@ -21,7 +21,7 @@ function averageEnergy(spectrum: Uint8Array) {
 
 function waveValue(raw: number, isByteData: boolean) {
   const value = isByteData ? (raw - 128) / 128 : raw
-  return Math.tanh(value * 0.9) * 0.55
+  return Math.tanh(value * 1.05) * 0.82
 }
 
 function drawHudFrame(context: CanvasRenderingContext2D, width: number, height: number) {
@@ -77,7 +77,7 @@ function buildWavePath(
 ) {
   context.beginPath()
   const last = samples.length - 1
-  const step = Math.max(1, Math.floor(samples.length / 72))
+  const step = Math.max(1, Math.floor(samples.length / 120))
 
   for (let index = 0; index <= last; index += step) {
     const progress = last === 0 ? 0 : index / last
@@ -134,7 +134,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
       if (hasLiveAudio) {
         analyser!.getByteTimeDomainData(waveform)
         analyser!.getByteFrequencyData(spectrum)
-        const follow = 0.05
+        const follow = 0.22
         for (let index = 0; index < waveform.length; index += 1) {
           const previous = smoothedWave[index] ?? 128
           const next = waveform[index] ?? 128
@@ -144,7 +144,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
           lastLiveWaveformRef.current = new Float32Array(smoothedWave.length)
         }
         lastLiveWaveformRef.current.set(smoothedWave)
-        energyRef.current += (averageEnergy(spectrum) - energyRef.current) * 0.08
+        energyRef.current += (averageEnergy(spectrum) - energyRef.current) * 0.2
       } else if (hasFrozenWave) {
         energyRef.current += (0.08 - energyRef.current) * 0.12
       } else {
@@ -159,7 +159,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
 
       const energy = energyRef.current
       const showLiveWave = hasLiveAudio || hasFrozenWave
-      const amplitude = canvasHeight * (showLiveWave ? 0.16 + energy * 0.05 : 0.22)
+      const amplitude = canvasHeight * (showLiveWave ? 0.26 + energy * 0.1 : 0.22)
       const liveSamples = hasLiveAudio ? smoothedWave : frozenWaveform
 
       context.setTransform(1, 0, 0, 1, 0, 0)
