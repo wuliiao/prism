@@ -91,6 +91,9 @@ App will be available at [http://localhost:8080](http://localhost:8080)
 
 ## GitFlow workflow
 
+Feature branches are created from `develop` and merged back into `develop`.
+`main` is updated only when a release is ready.
+
 ```bash
 git checkout develop
 git pull origin develop
@@ -108,15 +111,20 @@ git merge develop
 git push origin main
 ```
 
-Current feature branch: `feature/music-player`
-
 ## Storybook
 
 Documented components:
 
 - `Shared/Button`
 - `Shared/Slider`
+- `Shared/Toast`
+- `Entities/TrackItem`
+- `Features/PlayPauseButton`
+- `Features/SeekBar`
 - `Widgets/AudioVisualizer`
+- `Widgets/PlayerBar`
+- `Widgets/PlaylistPanel`
+- `Widgets/TrackSearchPanel`
 
 ```bash
 pnpm storybook
@@ -128,4 +136,4 @@ pnpm storybook
 pnpm test
 ```
 
-Tests cover time formatting, track mappers, and `TrackItem` interactions.
+Tests cover time formatting, track mappers, playlist hook, `SeekBar`, and `TrackItem` interactions.

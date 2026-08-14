@@ -87,6 +87,21 @@ code {
   color: rgb(56 189 248 / 70%);
 }
 
+.hud-corners {
+  pointer-events: none;
+  position: absolute;
+  inset: 8px;
+  background:
+    linear-gradient(rgb(56 189 248 / 40%), rgb(56 189 248 / 40%)) top left / 12px 1px no-repeat,
+    linear-gradient(rgb(56 189 248 / 40%), rgb(56 189 248 / 40%)) top left / 1px 12px no-repeat,
+    linear-gradient(rgb(56 189 248 / 40%), rgb(56 189 248 / 40%)) top right / 12px 1px no-repeat,
+    linear-gradient(rgb(56 189 248 / 40%), rgb(56 189 248 / 40%)) top right / 1px 12px no-repeat,
+    linear-gradient(rgb(56 189 248 / 40%), rgb(56 189 248 / 40%)) bottom left / 12px 1px no-repeat,
+    linear-gradient(rgb(56 189 248 / 40%), rgb(56 189 248 / 40%)) bottom left / 1px 12px no-repeat,
+    linear-gradient(rgb(56 189 248 / 40%), rgb(56 189 248 / 40%)) bottom right / 12px 1px no-repeat,
+    linear-gradient(rgb(56 189 248 / 40%), rgb(56 189 248 / 40%)) bottom right / 1px 12px no-repeat;
+}
+
 .hud-chip {
   border-radius: 4px;
   border: 1px solid rgb(56 189 248 / 15%);
@@ -138,17 +153,6 @@ code {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgb(56 189 248 / 35%);
-}
-
-@keyframes pulse-soft {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-
-  50% {
-    opacity: 0.8;
-  }
 }
 
 @keyframes equalizer {
