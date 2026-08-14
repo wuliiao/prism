@@ -6,14 +6,24 @@ import { isJamendoConfigured } from '@shared/config/env'
 import { Button } from '@shared/ui/Button'
 
 interface TrackSearchPanelProps {
+  onPreviewTrack: (track: Track) => void
   onAddTrack: (track: Track) => void
   onAddAll: (tracks: Track[]) => void
   isInPlaylist: (trackId: string) => boolean
+  currentTrack: Track | null
+  isPlaying: boolean
 }
 
 const GENRE_TAGS = ['chill', 'jazz', 'electronic', 'ambient', 'rock', 'lofi', 'pop']
 
-export function TrackSearchPanel({ onAddTrack, onAddAll, isInPlaylist }: TrackSearchPanelProps) {
+export function TrackSearchPanel({
+  onPreviewTrack,
+  onAddTrack,
+  onAddAll,
+  isInPlaylist,
+  currentTrack,
+  isPlaying,
+}: TrackSearchPanelProps) {
   const [query, setQuery] = useState('chill')
   const { tracks, isLoading, error, search } = useJamendoTracks()
 
@@ -52,7 +62,7 @@ export function TrackSearchPanel({ onAddTrack, onAddAll, isInPlaylist }: TrackSe
     <section className="glass-panel flex h-full min-h-[420px] flex-col rounded-2xl p-5">
       <header className="mb-4">
         <h2 className="text-base font-semibold text-zinc-100">Discover</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">Click a track to add and play</p>
+        <p className="mt-0.5 text-xs text-zinc-500">Hover and play to preview, then add to playlist</p>
 
         <form className="mt-4 flex gap-2" onSubmit={handleSubmit}>
           <input
@@ -120,9 +130,12 @@ export function TrackSearchPanel({ onAddTrack, onAddAll, isInPlaylist }: TrackSe
           <li key={track.id}>
             <TrackItem
               track={track}
-              onSelect={onAddTrack}
+              onPlay={onPreviewTrack}
+              onAdd={onAddTrack}
               actionLabel="Add"
               isInPlaylist={isInPlaylist(track.id)}
+              isActive={currentTrack?.id === track.id}
+              isPlaying={isPlaying && currentTrack?.id === track.id}
             />
           </li>
         ))}

@@ -30,5 +30,16 @@ export const Active: Story = {
 }
 
 export const InPlaylist: Story = {
-  args: { track: mockTrack, actionLabel: 'Add', isInPlaylist: true },
+  args: { track: mockTrack, actionLabel: 'Add', isInPlaylist: true, onAdd: () => {} },
+}
+
+export const DiscoverPreview: Story = {
+  args: {
+    track: mockTrack,
+    actionLabel: 'Add',
+    onPlay: () => {},
+    onAdd: () => {},
+    isActive: true,
+    isPlaying: true,
+  },
 }

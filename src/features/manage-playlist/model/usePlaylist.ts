@@ -67,13 +67,27 @@ export function usePlaylist() {
 
   const selectTrack = useCallback((track: Track) => {
     setTracks((prev) => {
-      const exists = prev.some((item) => item.id === track.id)
-      const next = exists ? prev : [...prev, track]
-      const index = next.findIndex((item) => item.id === track.id)
-      setCurrentIndex(index)
-      if (!exists) persist(next)
+      const index = prev.findIndex((item) => item.id === track.id)
+      if (index >= 0) setCurrentIndex(index)
+      return prev
+    })
+  }, [])
+
+  const addAndSelect = useCallback((track: Track): AddTrackResult => {
+    let result: AddTrackResult = 'exists'
+    setTracks((prev) => {
+      const existingIndex = prev.findIndex((item) => item.id === track.id)
+      if (existingIndex >= 0) {
+        setCurrentIndex(existingIndex)
+        return prev
+      }
+      result = 'added'
+      const next = [...prev, track]
+      setCurrentIndex(next.length - 1)
+      persist(next)
       return next
     })
+    return result
   }, [persist])
 
   const isInPlaylist = useCallback(
@@ -105,6 +119,7 @@ export function usePlaylist() {
     addTracks,
     removeTrack,
     selectTrack,
+    addAndSelect,
     isInPlaylist,
     playNext,
     playPrevious,
