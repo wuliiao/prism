@@ -3,6 +3,7 @@ import type { JamendoApiResponse, Track } from '@entities/track'
 import { mapJamendoTrack } from '@entities/track'
 
 const JAMENDO_BASE = 'https://api.jamendo.com/v3.0'
+const INTERNAL_ERROR_PATTERN = /internal error/i
 
 const MOOD_QUERIES = new Set([
   'ambient',
@@ -37,24 +38,61 @@ function isMoodQuery(query: string) {
   return MOOD_QUERIES.has(query.trim().toLowerCase())
 }
 
+function isInternalError(error: unknown) {
+  return error instanceof Error && INTERNAL_ERROR_PATTERN.test(error.message)
+}
+
 function jamendoErrorMessage(data: JamendoApiResponse) {
   const details = data.headers.error_message?.trim()
   if (details) return details
   return `Jamendo API error: ${data.headers.status}`
 }
 
+function toUserFacingError(error: unknown) {
+  if (isInternalError(error)) {
+    return new Error('Jamendo is temporarily unavailable. Try another search in a moment.')
+  }
+  return error instanceof Error ? error : new Error('Failed to load tracks')
+}
+
+function retryPauseMs(attempt: number) {
+  if ('jest' in globalThis) return 0
+  return 400 * attempt
+}
+
+async function wait(ms: number) {
+  if (ms <= 0) return
+  await new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function searchStrategies(query: string): Record<string, string>[] {
+  if (!query) {
+    return [{ boost: 'popularity_month' }]
+  }
+
+  if (isMoodQuery(query)) {
+    return [{ tags: query }, { fuzzytags: query }, { namesearch: query }]
+  }
+
+  return [{ namesearch: query }, { artist_name: query }, { fuzzytags: query }]
+}
+
 async function requestTracks(
   limit: number,
   extra: Record<string, string>,
+  includeMusicInfo: boolean,
 ): Promise<Track[]> {
   const params = new URLSearchParams({
     client_id: env.jamendoClientId,
     format: 'json',
     limit: String(limit),
     audioformat: 'mp32',
-    include: 'musicinfo',
     ...extra,
   })
+
+  if (includeMusicInfo) {
+    params.set('include', 'musicinfo')
+  }
 
   const response = await fetch(`${JAMENDO_BASE}/tracks/?${params.toString()}`)
 
@@ -71,18 +109,23 @@ async function requestTracks(
   return data.results.map(mapJamendoTrack)
 }
 
-async function requestTracksWithRetry(
+async function requestTracksStable(
   limit: number,
   extra: Record<string, string>,
 ): Promise<Track[]> {
   try {
-    return await requestTracks(limit, extra)
+    return await requestTracks(limit, extra, true)
   } catch (error) {
-    const message = error instanceof Error ? error.message : ''
-    if (!message.toLowerCase().includes('internal error')) {
-      throw error
+    if (!isInternalError(error)) throw error
+    await wait(retryPauseMs(1))
+
+    try {
+      return await requestTracks(limit, extra, true)
+    } catch (retryError) {
+      if (!isInternalError(retryError)) throw retryError
+      await wait(retryPauseMs(2))
+      return requestTracks(limit, extra, false)
     }
-    return requestTracks(limit, extra)
   }
 }
 
@@ -94,28 +137,22 @@ export async function fetchJamendoTracks({
     throw new Error('Jamendo client ID is not configured. Set VITE_JAMENDO_CLIENT_ID in .env')
   }
 
-  const query = search.trim()
-  if (!query) {
-    return requestTracksWithRetry(limit, { order: 'popularity_month' })
-  }
+  const strategies = searchStrategies(search.trim())
+  let lastError: unknown
 
-  const primary: Record<string, string> = isMoodQuery(query)
-    ? { fuzzytags: query }
-    : { namesearch: query }
-  const fallback: Record<string, string> = isMoodQuery(query)
-    ? { namesearch: query }
-    : { fuzzytags: query }
-
-  try {
-    const results = await requestTracksWithRetry(limit, primary)
-    if (results.length > 0) return results
-  } catch (error) {
+  for (const extra of strategies) {
     try {
-      return await requestTracksWithRetry(limit, fallback)
-    } catch {
+      const results = await requestTracksStable(limit, extra)
+      if (results.length > 0) return results
+    } catch (error) {
+      lastError = error
+      if (isInternalError(error)) {
+        throw toUserFacingError(error)
+      }
       throw error
     }
   }
 
-  return requestTracksWithRetry(limit, fallback)
+  if (lastError) throw toUserFacingError(lastError)
+  return []
 }
