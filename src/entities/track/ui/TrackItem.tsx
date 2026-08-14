@@ -1,5 +1,5 @@
 import { formatTime } from '@shared/lib/formatTime'
-import { IconClose, IconMusic, IconPlay, IconPlus } from '@shared/ui/Icon'
+import { IconCheck, IconClose, IconMusic, IconPlay, IconPlus } from '@shared/ui/Icon'
 import type { Track } from '../model/types'
 
 interface TrackItemProps {
@@ -126,19 +126,19 @@ export function TrackItem({
             type="button"
             aria-label={`Remove ${track.title} from playlist`}
             title="Remove from playlist"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-[#d4af5f]/30 bg-[#d4af5f]/10 font-mono text-xs text-[#d4af5f] transition hover:bg-[#d4af5f]/20"
+            className="hud-action hud-action-active h-8 w-8"
             onClick={() => onRemoveFromPlaylist?.(track)}
           >
-            ✓
+            <IconCheck className="h-3.5 w-3.5" />
           </button>
         ) : (
           <button
             type="button"
             aria-label={`${actionLabel} ${track.title}`}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-sky-400/25 bg-sky-500/10 text-sky-300 transition hover:bg-sky-500/20"
+            className="hud-action h-8 w-8"
             onClick={() => onAdd?.(track)}
           >
-            <IconPlus />
+            <IconPlus className="h-3.5 w-3.5" />
           </button>
         )
       ) : null}

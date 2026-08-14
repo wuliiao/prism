@@ -7,5 +7,6 @@ export {
   IconUpload,
   IconMusic,
   IconPlus,
+  IconCheck,
   IconClose,
 } from './Icons'

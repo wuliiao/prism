@@ -1,5 +1,5 @@
 import { UploadTrackButton } from '@features/upload-track'
-import { IconPlus } from '@shared/ui/Icon'
+import { IconCheck, IconPlus } from '@shared/ui/Icon'
 import { AudioVisualizer } from '@widgets/audio-visualizer'
 import { PlayerBar } from '@widgets/player-bar'
 import { PlaylistPanel } from '@widgets/playlist-panel'
@@ -89,18 +89,14 @@ export function PlayerPage() {
                     : `Add ${currentTrack.title} to playlist`
                 }
                 title={coverInPlaylist ? 'Remove from playlist' : 'Add to playlist'}
-                className={
-                  coverInPlaylist
-                    ? 'absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full border border-[#d4af5f]/40 bg-[#d4af5f]/90 font-mono text-sm font-semibold text-[#0a1525] shadow-[0_0_16px_rgb(212_175_95/35%)] transition hover:bg-[#e8c878] active:scale-95'
-                    : 'absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full border border-sky-300/40 bg-sky-500/90 text-white shadow-[0_0_16px_rgb(56_189_248/35%)] transition hover:bg-sky-400 active:scale-95'
-                }
+                className={`hud-action absolute bottom-3 right-3 ${coverInPlaylist ? 'hud-action-active' : ''}`}
                 onClick={() =>
                   coverInPlaylist
                     ? handleRemoveFromPlaylist(currentTrack)
                     : handleAddToPlaylist(currentTrack)
                 }
               >
-                {coverInPlaylist ? '✓' : <IconPlus className="h-5 w-5" />}
+                {coverInPlaylist ? <IconCheck className="h-4 w-4" /> : <IconPlus className="h-4 w-4" />}
               </button>
             ) : null}
           </div>
