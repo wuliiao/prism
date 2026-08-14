@@ -31,6 +31,26 @@ describe('TrackItem', () => {
     expect(onSelect).toHaveBeenCalledWith(mockTrack)
   })
 
+  it('calls onPlay when cover play button is clicked', async () => {
+    const user = userEvent.setup()
+    const onPlay = jest.fn()
+
+    render(<TrackItem track={mockTrack} onPlay={onPlay} actionLabel="Add" onAdd={() => {}} />)
+    await user.click(screen.getByLabelText('Play Sunset Drive'))
+
+    expect(onPlay).toHaveBeenCalledWith(mockTrack)
+  })
+
+  it('calls onAdd when add button is clicked', async () => {
+    const user = userEvent.setup()
+    const onAdd = jest.fn()
+
+    render(<TrackItem track={mockTrack} onPlay={() => {}} actionLabel="Add" onAdd={onAdd} />)
+    await user.click(screen.getByLabelText('Add Sunset Drive'))
+
+    expect(onAdd).toHaveBeenCalledWith(mockTrack)
+  })
+
   it('shows remove button when onRemove is provided', async () => {
     const user = userEvent.setup()
     const onRemove = jest.fn()

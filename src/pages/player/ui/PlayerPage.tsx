@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import type { Track } from '@entities/track'
 import { useAudioEngine } from '@entities/audio'
 import { usePlaylist } from '@features/manage-playlist'
@@ -18,6 +18,7 @@ export function PlayerPage() {
   const {
     tracks,
     addTrack,
+    addAndSelect,
     addTracks,
     removeTrack,
     selectTrack,
@@ -26,48 +27,70 @@ export function PlayerPage() {
     playPrevious,
   } = usePlaylist()
 
+  const isPlaylistPlaybackRef = useRef(true)
+
   const playTrack = useCallback(
     async (track: Track) => {
+      isPlaylistPlaybackRef.current = true
       selectTrack(track)
       await loadTrack(track)
     },
     [loadTrack, selectTrack],
   )
 
-  const handleAddTrack = useCallback(
+  const previewTrack = useCallback(
     async (track: Track) => {
-      const result = addTrack(track)
-      if (result === 'exists') {
-        showToast('Already in playlist — playing', 'info')
+      isPlaylistPlaybackRef.current = isInPlaylist(track.id)
+      if (isInPlaylist(track.id)) {
+        selectTrack(track)
       }
-      await playTrack(track)
+      await loadTrack(track)
+    },
+    [isInPlaylist, loadTrack, selectTrack],
+  )
+
+  const handleAddToPlaylist = useCallback(
+    (track: Track) => {
+      const result = addTrack(track)
       if (result === 'added') {
-        showToast(`Now playing: ${track.title}`, 'success')
+        showToast(`Added: ${track.title}`, 'success')
+        if (currentTrack?.id === track.id) {
+          isPlaylistPlaybackRef.current = true
+          selectTrack(track)
+        }
+      } else {
+        showToast('Already in playlist', 'info')
       }
     },
-    [addTrack, playTrack, showToast],
+    [addTrack, currentTrack?.id, selectTrack, showToast],
   )
 
   const handleUpload = useCallback(
     async (track: Track) => {
-      await playTrack(track)
+      addAndSelect(track)
+      isPlaylistPlaybackRef.current = true
+      await loadTrack(track)
       showToast(`Uploaded: ${track.title}`, 'success')
     },
-    [playTrack, showToast],
+    [addAndSelect, loadTrack, showToast],
   )
 
   const handleNext = useCallback(async () => {
+    isPlaylistPlaybackRef.current = true
     const next = playNext()
     if (next) await loadTrack(next)
   }, [loadTrack, playNext])
 
   const handlePrevious = useCallback(async () => {
+    isPlaylistPlaybackRef.current = true
     const previous = playPrevious()
     if (previous) await loadTrack(previous)
   }, [loadTrack, playPrevious])
 
   useEffect(() => {
     return registerOnTrackEnded(() => {
+      if (!isPlaylistPlaybackRef.current) return
+
       void (async () => {
         const next = playNext()
         if (next) await loadTrack(next)
@@ -158,9 +181,12 @@ export function PlayerPage() {
 
       <div className="grid flex-1 gap-6 lg:grid-cols-2">
         <TrackSearchPanel
-          onAddTrack={handleAddTrack}
+          onPreviewTrack={(track) => void previewTrack(track)}
+          onAddTrack={handleAddToPlaylist}
           onAddAll={addTracks}
           isInPlaylist={isInPlaylist}
+          currentTrack={currentTrack}
+          isPlaying={isPlaying}
         />
         <PlaylistPanel
           tracks={tracks}

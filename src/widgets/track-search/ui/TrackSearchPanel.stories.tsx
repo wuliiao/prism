@@ -13,8 +13,11 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: {
+    onPreviewTrack: () => {},
     onAddTrack: () => {},
     onAddAll: () => {},
     isInPlaylist: () => false,
+    currentTrack: null,
+    isPlaying: false,
   },
 }
