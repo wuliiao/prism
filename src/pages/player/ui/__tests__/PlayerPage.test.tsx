@@ -27,6 +27,7 @@ function mockVisualizerApis() {
       beginPath: jest.fn(),
       moveTo: jest.fn(),
       lineTo: jest.fn(),
+      quadraticCurveTo: jest.fn(),
       stroke: jest.fn(),
       fillText: jest.fn(),
       createLinearGradient: () => ({ addColorStop: jest.fn() }),

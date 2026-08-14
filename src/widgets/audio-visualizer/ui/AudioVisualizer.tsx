@@ -7,6 +7,11 @@ interface AudioVisualizerProps {
 
 const HUD_CYAN = 'rgba(56, 189, 248, 0.7)'
 const HUD_GOLD = 'rgba(212, 175, 95, 0.7)'
+const WAVE_POINTS = 96
+
+function lerp(current: number, target: number, amount: number) {
+  return current + (target - current) * amount
+}
 
 function averageEnergy(spectrum: Uint8Array) {
   if (spectrum.length === 0) return 0
@@ -19,9 +24,15 @@ function averageEnergy(spectrum: Uint8Array) {
   return Math.min(1, (sum / spectrum.length / 255) * 0.7 + (peak / 255) * 0.3)
 }
 
-function waveValue(raw: number, isByteData: boolean) {
-  const value = isByteData ? (raw - 128) / 128 : raw
-  return Math.tanh(value * 1.05) * 0.82
+function bandEnergy(spectrum: Uint8Array, from: number, to: number) {
+  const end = Math.min(to, spectrum.length)
+  const start = Math.min(from, end)
+  if (end <= start) return 0
+  let sum = 0
+  for (let index = start; index < end; index += 1) {
+    sum += spectrum[index] ?? 0
+  }
+  return sum / ((end - start) * 255)
 }
 
 function drawHudFrame(context: CanvasRenderingContext2D, width: number, height: number) {
@@ -69,29 +80,53 @@ function drawHudLabels(
 
 function buildWavePath(
   context: CanvasRenderingContext2D,
-  samples: Uint8Array | Float32Array,
+  samples: Float32Array,
   width: number,
   centerY: number,
   amplitude: number,
-  isByteData: boolean,
 ) {
-  context.beginPath()
   const last = samples.length - 1
-  const step = Math.max(1, Math.floor(samples.length / 120))
+  if (last < 0) return
 
-  for (let index = 0; index <= last; index += step) {
+  const points: Array<{ x: number; y: number }> = []
+  for (let index = 0; index <= last; index += 1) {
     const progress = last === 0 ? 0 : index / last
-    const raw = samples[index] ?? (isByteData ? 128 : 0)
-    const value = waveValue(raw, isByteData)
-    const x = progress * width
-    const y = centerY + value * amplitude
-    if (index === 0) context.moveTo(x, y)
-    else context.lineTo(x, y)
+    const value = Math.tanh(samples[index] ?? 0)
+    points.push({ x: progress * width, y: centerY + value * amplitude })
   }
 
-  if (last % step !== 0) {
-    const raw = samples[last] ?? (isByteData ? 128 : 0)
-    context.lineTo(width, centerY + waveValue(raw, isByteData) * amplitude)
+  context.beginPath()
+  const first = points[0]
+  if (!first) return
+  context.moveTo(first.x, first.y)
+
+  for (let index = 1; index < points.length - 1; index += 1) {
+    const current = points[index]
+    const next = points[index + 1]
+    if (!current || !next) continue
+    context.quadraticCurveTo(current.x, current.y, (current.x + next.x) / 2, (current.y + next.y) / 2)
+  }
+
+  const end = points[points.length - 1]
+  if (end) context.lineTo(end.x, end.y)
+}
+
+function fillWave(
+  samples: Float32Array,
+  phase: number,
+  bass: number,
+  mid: number,
+  treble: number,
+  gain: number,
+) {
+  const last = samples.length - 1
+  for (let index = 0; index <= last; index += 1) {
+    const progress = last === 0 ? 0 : index / last
+    samples[index] =
+      (Math.sin(progress * Math.PI * 2 + phase) * (0.42 + bass * 0.58) +
+        Math.sin(progress * Math.PI * 4 + phase * 1.15) * mid * 0.32 +
+        Math.sin(progress * Math.PI * 7 + phase * 1.4) * treble * 0.16) *
+      gain
   }
 }
 
@@ -102,6 +137,9 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
   const animationRef = useRef<number | null>(null)
   const phaseRef = useRef(0)
   const energyRef = useRef(0)
+  const bassRef = useRef(0)
+  const midRef = useRef(0)
+  const trebleRef = useRef(0)
   const lastLiveWaveformRef = useRef<Float32Array | null>(null)
 
   useEffect(() => {
@@ -112,14 +150,11 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
     if (!context) return
 
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const waveform = new Uint8Array(analyser?.fftSize ?? 256)
     const spectrum = new Uint8Array(analyser?.frequencyBinCount ?? 128)
-    const idleWave = new Float32Array(waveform.length)
-    const smoothedWave = new Float32Array(waveform.length)
-    if (lastLiveWaveformRef.current && lastLiveWaveformRef.current.length === smoothedWave.length) {
-      smoothedWave.set(lastLiveWaveformRef.current)
-    } else {
-      smoothedWave.fill(128)
+    const liveWave = new Float32Array(WAVE_POINTS)
+    const idleWave = new Float32Array(WAVE_POINTS)
+    if (lastLiveWaveformRef.current && lastLiveWaveformRef.current.length === WAVE_POINTS) {
+      liveWave.set(lastLiveWaveformRef.current)
     }
 
     const drawFrame = (animateIdle: boolean) => {
@@ -132,35 +167,37 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
       const hasFrozenWave = Boolean(currentTrack && frozenWaveform && frozenWaveform.length > 0)
 
       if (hasLiveAudio) {
-        analyser!.getByteTimeDomainData(waveform)
         analyser!.getByteFrequencyData(spectrum)
-        const follow = 0.22
-        for (let index = 0; index < waveform.length; index += 1) {
-          const previous = smoothedWave[index] ?? 128
-          const next = waveform[index] ?? 128
-          smoothedWave[index] = previous + (next - previous) * follow
+        bassRef.current = lerp(bassRef.current, bandEnergy(spectrum, 0, 10), 0.1)
+        midRef.current = lerp(midRef.current, bandEnergy(spectrum, 10, 48), 0.08)
+        trebleRef.current = lerp(trebleRef.current, bandEnergy(spectrum, 48, 140), 0.06)
+        energyRef.current = lerp(energyRef.current, averageEnergy(spectrum), 0.1)
+        phaseRef.current += 0.028 + bassRef.current * 0.03
+        fillWave(
+          liveWave,
+          phaseRef.current,
+          bassRef.current,
+          midRef.current,
+          trebleRef.current,
+          0.85 + energyRef.current * 0.2,
+        )
+        if (!lastLiveWaveformRef.current || lastLiveWaveformRef.current.length !== WAVE_POINTS) {
+          lastLiveWaveformRef.current = new Float32Array(WAVE_POINTS)
         }
-        if (!lastLiveWaveformRef.current || lastLiveWaveformRef.current.length !== smoothedWave.length) {
-          lastLiveWaveformRef.current = new Float32Array(smoothedWave.length)
-        }
-        lastLiveWaveformRef.current.set(smoothedWave)
-        energyRef.current += (averageEnergy(spectrum) - energyRef.current) * 0.2
+        lastLiveWaveformRef.current.set(liveWave)
       } else if (hasFrozenWave) {
-        energyRef.current += (0.08 - energyRef.current) * 0.12
+        energyRef.current = lerp(energyRef.current, 0.08, 0.12)
       } else {
         lastLiveWaveformRef.current = null
-        energyRef.current += (0.12 - energyRef.current) * 0.08
+        energyRef.current = lerp(energyRef.current, 0.12, 0.08)
         if (animateIdle) phaseRef.current += 0.018
-        for (let index = 0; index < idleWave.length; index += 1) {
-          const progress = index / (idleWave.length - 1)
-          idleWave[index] = Math.sin(progress * Math.PI * 2.4 + phaseRef.current) * 0.22
-        }
+        fillWave(idleWave, phaseRef.current, 0.18, 0.08, 0.04, 0.22)
       }
 
       const energy = energyRef.current
       const showLiveWave = hasLiveAudio || hasFrozenWave
-      const amplitude = canvasHeight * (showLiveWave ? 0.26 + energy * 0.1 : 0.22)
-      const liveSamples = hasLiveAudio ? smoothedWave : frozenWaveform
+      const amplitude = canvasHeight * (showLiveWave ? 0.28 + energy * 0.12 : 0.22)
+      const liveSamples = hasLiveAudio ? liveWave : frozenWaveform
 
       context.setTransform(1, 0, 0, 1, 0, 0)
       context.clearRect(0, 0, canvas.width, canvas.height)
@@ -188,7 +225,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
       if (showLiveWave && liveSamples) {
         context.strokeStyle = `rgba(212, 175, 95, ${hasLiveAudio ? 0.28 : 0.16})`
         context.lineWidth = 1
-        buildWavePath(context, liveSamples, width, centerY + 6, amplitude * 0.55, true)
+        buildWavePath(context, liveSamples, width, centerY + 6, amplitude * 0.55)
         context.stroke()
       }
 
@@ -197,9 +234,9 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
         : 'rgba(56, 189, 248, 0.35)'
       context.lineWidth = showLiveWave ? 2 : 1.25
       if (showLiveWave && liveSamples) {
-        buildWavePath(context, liveSamples, width, centerY, amplitude, true)
+        buildWavePath(context, liveSamples, width, centerY, amplitude)
       } else {
-        buildWavePath(context, idleWave, width, centerY, amplitude, false)
+        buildWavePath(context, idleWave, width, centerY, amplitude)
       }
       context.stroke()
     }
