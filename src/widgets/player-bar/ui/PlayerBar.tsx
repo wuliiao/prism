@@ -1,6 +1,7 @@
 import { useAudioEngine } from '@entities/audio'
 import { PlayPauseButton } from '@features/toggle-playback'
 import { SeekBar } from '@features/seek-track'
+import { IconMusic, IconSkipBack, IconSkipForward, IconVolume } from '@shared/ui/Icon'
 import { Slider } from '@shared/ui/Slider'
 import { Button } from '@shared/ui/Button'
 
@@ -13,49 +14,62 @@ export function PlayerBar({ onNext, onPrevious }: PlayerBarProps) {
   const { currentTrack, volume, setVolume } = useAudioEngine()
 
   return (
-    <footer className="rounded-2xl border border-white/10 bg-zinc-900/90 p-4 backdrop-blur">
-      <div className="mb-4 flex items-center gap-4">
-        {currentTrack?.coverUrl ? (
-          <img
-            src={currentTrack.coverUrl}
-            alt=""
-            className="h-14 w-14 rounded-xl object-cover"
-          />
-        ) : (
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-violet-500/20 text-2xl text-violet-300">
-            ♪
+    <footer className="glass-panel-strong fixed inset-x-0 bottom-0 z-50 border-t border-white/10">
+      <div className="mx-auto max-w-6xl px-4 py-3">
+        <div className="mb-2 hidden sm:block">
+          <SeekBar />
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            {currentTrack?.coverUrl ? (
+              <img
+                src={currentTrack.coverUrl}
+                alt=""
+                className="h-12 w-12 shrink-0 rounded-lg object-cover shadow-lg ring-1 ring-white/10"
+              />
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-violet-500/20 text-violet-300 ring-1 ring-white/10">
+                <IconMusic className="h-5 w-5" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-zinc-100">
+                {currentTrack?.title ?? 'No track selected'}
+              </p>
+              <p className="truncate text-xs text-zinc-400">
+                {currentTrack?.artist ?? 'Pick something from Discover or your playlist'}
+              </p>
+            </div>
           </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-zinc-100">
-            {currentTrack?.title ?? 'No track selected'}
-          </p>
-          <p className="truncate text-sm text-zinc-400">
-            {currentTrack?.artist ?? 'Choose a track from the playlist or search'}
-          </p>
-        </div>
-        <div className="hidden w-32 sm:block">
-          <Slider
-            label="Volume"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onChange={(event) => setVolume(Number(event.target.value))}
-          />
-        </div>
-      </div>
 
-      <SeekBar />
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="icon" aria-label="Previous track" onClick={onPrevious}>
+              <IconSkipBack className="h-5 w-5" />
+            </Button>
+            <PlayPauseButton />
+            <Button variant="icon" aria-label="Next track" onClick={onNext}>
+              <IconSkipForward className="h-5 w-5" />
+            </Button>
+          </div>
 
-      <div className="mt-4 flex items-center justify-center gap-3">
-        <Button variant="ghost" aria-label="Previous track" onClick={onPrevious}>
-          ⏮
-        </Button>
-        <PlayPauseButton />
-        <Button variant="ghost" aria-label="Next track" onClick={onNext}>
-          ⏭
-        </Button>
+          <div className="hidden min-w-0 flex-1 items-center justify-end gap-2 md:flex">
+            <IconVolume className="h-4 w-4 shrink-0 text-zinc-400" />
+            <Slider
+              showLabel={false}
+              min={0}
+              max={1}
+              step={0.01}
+              value={volume}
+              onChange={(event) => setVolume(Number(event.target.value))}
+              className="w-28"
+            />
+          </div>
+        </div>
+
+        <div className="mt-2 sm:hidden">
+          <SeekBar />
+        </div>
       </div>
     </footer>
   )
