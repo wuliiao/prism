@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { Track } from '@entities/track'
 
 const STORAGE_KEY = 'harmony-hub-playlist'
+
+export type AddTrackResult = 'added' | 'exists'
 
 function readStoredPlaylist(): Track[] {
   try {
@@ -17,24 +19,36 @@ export function usePlaylist() {
   const [tracks, setTracks] = useState<Track[]>(() => readStoredPlaylist())
   const [currentIndex, setCurrentIndex] = useState(-1)
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tracks))
-  }, [tracks])
+  const persist = useCallback((next: Track[]) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    } catch {
+      // quota exceeded — keep in memory only
+    }
+  }, [])
 
-  const addTrack = useCallback((track: Track) => {
+  const addTrack = useCallback((track: Track): AddTrackResult => {
+    let result: AddTrackResult = 'exists'
     setTracks((prev) => {
       if (prev.some((item) => item.id === track.id)) return prev
-      return [...prev, track]
+      result = 'added'
+      const next = [...prev, track]
+      persist(next)
+      return next
     })
-  }, [])
+    return result
+  }, [persist])
 
   const addTracks = useCallback((newTracks: Track[]) => {
     setTracks((prev) => {
       const ids = new Set(prev.map((track) => track.id))
       const unique = newTracks.filter((track) => !ids.has(track.id))
-      return [...prev, ...unique]
+      if (unique.length === 0) return prev
+      const next = [...prev, ...unique]
+      persist(next)
+      return next
     })
-  }, [])
+  }, [persist])
 
   const removeTrack = useCallback((trackId: string) => {
     setTracks((prev) => {
@@ -46,9 +60,10 @@ export function usePlaylist() {
         return Math.max(0, current - 1)
       })
 
+      persist(next)
       return next
     })
-  }, [])
+  }, [persist])
 
   const selectTrack = useCallback((track: Track) => {
     setTracks((prev) => {
@@ -56,9 +71,15 @@ export function usePlaylist() {
       const next = exists ? prev : [...prev, track]
       const index = next.findIndex((item) => item.id === track.id)
       setCurrentIndex(index)
+      if (!exists) persist(next)
       return next
     })
-  }, [])
+  }, [persist])
+
+  const isInPlaylist = useCallback(
+    (trackId: string) => tracks.some((track) => track.id === trackId),
+    [tracks],
+  )
 
   const playNext = useCallback((): Track | null => {
     if (tracks.length === 0) return null
@@ -84,6 +105,7 @@ export function usePlaylist() {
     addTracks,
     removeTrack,
     selectTrack,
+    isInPlaylist,
     playNext,
     playPrevious,
   }

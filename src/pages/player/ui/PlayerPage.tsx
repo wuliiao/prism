@@ -20,6 +20,7 @@ export function PlayerPage() {
     addTracks,
     removeTrack,
     selectTrack,
+    isInPlaylist,
     playNext,
     playPrevious,
   } = usePlaylist()
@@ -34,9 +35,14 @@ export function PlayerPage() {
 
   const handleAddTrack = useCallback(
     async (track: Track) => {
-      addTrack(track)
+      const result = addTrack(track)
+      if (result === 'exists') {
+        showToast('Already in playlist — playing', 'info')
+      }
       await playTrack(track)
-      showToast(`Now playing: ${track.title}`, 'success')
+      if (result === 'added') {
+        showToast(`Now playing: ${track.title}`, 'success')
+      }
     },
     [addTrack, playTrack, showToast],
   )
@@ -138,7 +144,11 @@ export function PlayerPage() {
       </section>
 
       <div className="grid flex-1 gap-6 lg:grid-cols-2">
-        <TrackSearchPanel onAddTrack={handleAddTrack} onAddAll={addTracks} />
+        <TrackSearchPanel
+          onAddTrack={handleAddTrack}
+          onAddAll={addTracks}
+          isInPlaylist={isInPlaylist}
+        />
         <PlaylistPanel
           tracks={tracks}
           currentTrack={currentTrack}

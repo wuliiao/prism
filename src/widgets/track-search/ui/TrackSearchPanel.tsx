@@ -8,11 +8,12 @@ import { Button } from '@shared/ui/Button'
 interface TrackSearchPanelProps {
   onAddTrack: (track: Track) => void
   onAddAll: (tracks: Track[]) => void
+  isInPlaylist: (trackId: string) => boolean
 }
 
 const GENRE_TAGS = ['chill', 'jazz', 'electronic', 'ambient', 'rock', 'lofi', 'pop']
 
-export function TrackSearchPanel({ onAddTrack, onAddAll }: TrackSearchPanelProps) {
+export function TrackSearchPanel({ onAddTrack, onAddAll, isInPlaylist }: TrackSearchPanelProps) {
   const [query, setQuery] = useState('chill')
   const { tracks, isLoading, error, search } = useJamendoTracks()
 
@@ -117,7 +118,12 @@ export function TrackSearchPanel({ onAddTrack, onAddAll }: TrackSearchPanelProps
 
         {tracks.map((track) => (
           <li key={track.id}>
-            <TrackItem track={track} onSelect={onAddTrack} actionLabel="Add" />
+            <TrackItem
+              track={track}
+              onSelect={onAddTrack}
+              actionLabel="Add"
+              isInPlaylist={isInPlaylist(track.id)}
+            />
           </li>
         ))}
       </ul>
