@@ -51,6 +51,25 @@ describe('TrackItem', () => {
     expect(onAdd).toHaveBeenCalledWith(mockTrack)
   })
 
+  it('calls onRemoveFromPlaylist when checkmark is clicked', async () => {
+    const user = userEvent.setup()
+    const onRemoveFromPlaylist = jest.fn()
+
+    render(
+      <TrackItem
+        track={mockTrack}
+        onPlay={() => {}}
+        actionLabel="Add"
+        onAdd={() => {}}
+        isInPlaylist
+        onRemoveFromPlaylist={onRemoveFromPlaylist}
+      />,
+    )
+    await user.click(screen.getByLabelText('Remove Sunset Drive from playlist'))
+
+    expect(onRemoveFromPlaylist).toHaveBeenCalledWith(mockTrack)
+  })
+
   it('shows remove button when onRemove is provided', async () => {
     const user = userEvent.setup()
     const onRemove = jest.fn()

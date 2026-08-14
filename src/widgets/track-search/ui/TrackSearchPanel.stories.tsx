@@ -15,6 +15,7 @@ export const Default: Story = {
   args: {
     onPreviewTrack: () => {},
     onAddTrack: () => {},
+    onRemoveFromPlaylist: () => {},
     onAddAll: () => {},
     isInPlaylist: () => false,
     currentTrack: null,

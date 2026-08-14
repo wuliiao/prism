@@ -8,6 +8,7 @@ import { Button } from '@shared/ui/Button'
 interface TrackSearchPanelProps {
   onPreviewTrack: (track: Track) => void
   onAddTrack: (track: Track) => void
+  onRemoveFromPlaylist: (track: Track) => void
   onAddAll: (tracks: Track[]) => void
   isInPlaylist: (trackId: string) => boolean
   currentTrack: Track | null
@@ -19,6 +20,7 @@ const GENRE_TAGS = ['chill', 'jazz', 'electronic', 'ambient', 'rock', 'lofi', 'p
 export function TrackSearchPanel({
   onPreviewTrack,
   onAddTrack,
+  onRemoveFromPlaylist,
   onAddAll,
   isInPlaylist,
   currentTrack,
@@ -137,6 +139,7 @@ export function TrackSearchPanel({
               track={track}
               onPlay={onPreviewTrack}
               onAdd={onAddTrack}
+              onRemoveFromPlaylist={onRemoveFromPlaylist}
               actionLabel="Add"
               isInPlaylist={isInPlaylist(track.id)}
               isActive={currentTrack?.id === track.id}

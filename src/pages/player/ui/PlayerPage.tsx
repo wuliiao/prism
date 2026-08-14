@@ -68,6 +68,19 @@ export function PlayerPage() {
     [addTrack, currentTrack?.id, selectTrack, showToast],
   )
 
+  const handleRemoveFromPlaylist = useCallback(
+    (track: Track) => {
+      if (!isInPlaylist(track.id)) return
+
+      removeTrack(track.id)
+      if (currentTrack?.id === track.id) {
+        isPlaylistPlaybackRef.current = false
+      }
+      showToast(`Removed: ${track.title}`, 'info')
+    },
+    [currentTrack?.id, isInPlaylist, removeTrack, showToast],
+  )
+
   const handleAddAll = useCallback(
     (newTracks: Track[]) => {
       const addedCount = addTracks(newTracks)
@@ -205,13 +218,15 @@ export function PlayerPage() {
             ) : null}
             {currentTrack && !isLoading ? (
               isInPlaylist(currentTrack.id) ? (
-                <span
-                  className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/90 text-sm font-semibold text-white shadow-lg ring-2 ring-black/20"
-                  aria-label="In playlist"
-                  title="In playlist"
+                <button
+                  type="button"
+                  aria-label={`Remove ${currentTrack.title} from playlist`}
+                  title="Remove from playlist"
+                  className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/90 text-sm font-semibold text-white shadow-lg ring-2 ring-black/20 transition hover:bg-emerald-400 active:scale-95"
+                  onClick={() => handleRemoveFromPlaylist(currentTrack)}
                 >
                   ✓
-                </span>
+                </button>
               ) : (
                 <button
                   type="button"
@@ -252,6 +267,7 @@ export function PlayerPage() {
         <TrackSearchPanel
           onPreviewTrack={(track) => void previewTrack(track)}
           onAddTrack={handleAddToPlaylist}
+          onRemoveFromPlaylist={handleRemoveFromPlaylist}
           onAddAll={handleAddAll}
           isInPlaylist={isInPlaylist}
           currentTrack={currentTrack}
