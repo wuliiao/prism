@@ -64,4 +64,21 @@ describe('usePlaylist', () => {
 
     setItem.mockRestore()
   })
+
+  it('updates duration for a local track after metadata loads', () => {
+    const localTrack: Track = {
+      ...mockTrack,
+      id: 'local-1',
+      source: 'local',
+      duration: 0,
+    }
+    const { result } = renderHook(() => usePlaylist())
+
+    act(() => {
+      result.current.addTrack(localTrack)
+      result.current.updateTrackDuration(localTrack.id, 187)
+    })
+
+    expect(result.current.tracks[0]?.duration).toBe(187)
+  })
 })

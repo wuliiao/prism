@@ -16,7 +16,6 @@ export function useJamendoTracks() {
       setTracks(results)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load tracks')
-      setTracks([])
     } finally {
       setIsLoading(false)
     }

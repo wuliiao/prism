@@ -80,6 +80,7 @@ export function PlaylistPanel({
             <button
               type="button"
               onClick={() => setActiveGenre(null)}
+              aria-pressed={activeGenre === null}
               className={`hud-chip capitalize ${activeGenre === null ? 'hud-chip-active' : ''}`}
             >
               All
@@ -89,6 +90,7 @@ export function PlaylistPanel({
                 key={genre}
                 type="button"
                 onClick={() => setActiveGenre(genre)}
+                aria-pressed={activeGenre === genre}
                 className={`hud-chip capitalize ${activeGenre === genre ? 'hud-chip-active' : ''}`}
               >
                 {genre}
@@ -98,6 +100,7 @@ export function PlaylistPanel({
               <button
                 type="button"
                 onClick={() => setActiveGenre('local')}
+                aria-pressed={activeGenre === 'local'}
                 className={`hud-chip capitalize ${activeGenre === 'local' ? 'hud-chip-active' : ''}`}
               >
                 Local

@@ -41,7 +41,7 @@ function TrackCover({
       {track.coverUrl ? (
         <img
           src={track.coverUrl}
-          alt={track.title}
+          alt={`Cover for ${track.title} by ${track.artist}`}
           className="h-11 w-11 rounded-lg object-cover shadow-md ring-1 ring-white/10"
         />
       ) : (

@@ -17,10 +17,10 @@ export function useKeyboardShortcuts({
     if (!enabled) return
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-        return
-      }
+      const target = event.target
+      if (!(target instanceof HTMLElement)) return
+      if (target.isContentEditable) return
+      if (target.closest('input, textarea, select, button, [role="button"]')) return
 
       switch (event.code) {
         case 'Space':
