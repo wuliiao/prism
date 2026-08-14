@@ -50,7 +50,7 @@ function jamendoErrorMessage(data: JamendoApiResponse) {
 
 function toUserFacingError(error: unknown) {
   if (isInternalError(error)) {
-    return new Error('Jamendo is temporarily unavailable. Try another search in a moment.')
+    return new Error('Jamendo catalog is temporarily unavailable. Try again in a moment.')
   }
   return error instanceof Error ? error : new Error('Failed to load tracks')
 }

@@ -79,7 +79,7 @@ describe('fetchJamendoTracks', () => {
     fetchMock.mockReturnValue(jsonResponse(internalErrorBody()))
 
     await expect(fetchJamendoTracks({ search: 'ocean' })).rejects.toThrow(
-      'Jamendo is temporarily unavailable. Try another search in a moment.',
+      'Jamendo catalog is temporarily unavailable. Try again in a moment.',
     )
     expect(fetchMock).toHaveBeenCalledTimes(3)
   })
