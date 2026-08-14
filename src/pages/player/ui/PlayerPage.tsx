@@ -169,6 +169,7 @@ export function PlayerPage() {
 
   const isPreviewMode = Boolean(currentTrack && !isInPlaylist(currentTrack.id))
   const canNavigate = tracks.length > 0 && !isPreviewMode
+  const coverInPlaylist = Boolean(currentTrack && isInPlaylist(currentTrack.id))
 
   return (
     <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-44 pt-6 sm:px-6 sm:pb-36 sm:pt-8">
@@ -220,37 +221,34 @@ export function PlayerPage() {
                 />
               </div>
             )}
-            <span className="pointer-events-none absolute left-2 top-2 h-3 w-3 border-l border-t border-sky-400/40" />
-            <span className="pointer-events-none absolute right-2 top-2 h-3 w-3 border-r border-t border-sky-400/40" />
-            <span className="pointer-events-none absolute bottom-2 left-2 h-3 w-3 border-b border-l border-sky-400/40" />
-            <span className="pointer-events-none absolute bottom-2 right-2 h-3 w-3 border-b border-r border-sky-400/40" />
+            <span className="hud-corners" aria-hidden />
             {isLoading ? (
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#050a14]/40 backdrop-blur-[2px]">
                 <span className="h-10 w-10 animate-spin rounded-full border-2 border-sky-400/20 border-t-sky-400" />
               </div>
             ) : null}
             {currentTrack && !isLoading ? (
-              isInPlaylist(currentTrack.id) ? (
-                <button
-                  type="button"
-                  aria-label={`Remove ${currentTrack.title} from playlist`}
-                  title="Remove from playlist"
-                  className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full border border-[#d4af5f]/40 bg-[#d4af5f]/90 font-mono text-sm font-semibold text-[#0a1525] shadow-[0_0_16px_rgb(212_175_95/35%)] transition hover:bg-[#e8c878] active:scale-95"
-                  onClick={() => handleRemoveFromPlaylist(currentTrack)}
-                >
-                  ✓
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  aria-label={`Add ${currentTrack.title} to playlist`}
-                  title="Add to playlist"
-                  className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full border border-sky-300/40 bg-sky-500/90 text-white shadow-[0_0_16px_rgb(56_189_248/35%)] transition hover:bg-sky-400 active:scale-95"
-                  onClick={() => handleAddToPlaylist(currentTrack)}
-                >
-                  <IconPlus className="h-5 w-5" />
-                </button>
-              )
+              <button
+                type="button"
+                aria-label={
+                  coverInPlaylist
+                    ? `Remove ${currentTrack.title} from playlist`
+                    : `Add ${currentTrack.title} to playlist`
+                }
+                title={coverInPlaylist ? 'Remove from playlist' : 'Add to playlist'}
+                className={
+                  coverInPlaylist
+                    ? 'absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full border border-[#d4af5f]/40 bg-[#d4af5f]/90 font-mono text-sm font-semibold text-[#0a1525] shadow-[0_0_16px_rgb(212_175_95/35%)] transition hover:bg-[#e8c878] active:scale-95'
+                    : 'absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full border border-sky-300/40 bg-sky-500/90 text-white shadow-[0_0_16px_rgb(56_189_248/35%)] transition hover:bg-sky-400 active:scale-95'
+                }
+                onClick={() =>
+                  coverInPlaylist
+                    ? handleRemoveFromPlaylist(currentTrack)
+                    : handleAddToPlaylist(currentTrack)
+                }
+              >
+                {coverInPlaylist ? '✓' : <IconPlus className="h-5 w-5" />}
+              </button>
             ) : null}
           </div>
           <div className="w-full text-center lg:text-left">
