@@ -39,13 +39,22 @@ function readStoredShuffle(): boolean {
   }
 }
 
-function pickShuffledIndex(length: number, currentIndex: number): number {
-  if (length <= 1) return 0
-  let next = currentIndex
-  while (next === currentIndex) {
-    next = Math.floor(Math.random() * length)
+function shuffledRest(length: number, exclude: number): number[] {
+  const indices: number[] = []
+  for (let index = 0; index < length; index += 1) {
+    if (index !== exclude) indices.push(index)
   }
-  return next
+
+  for (let index = indices.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1))
+    const current = indices[index]
+    const swap = indices[swapIndex]
+    if (current === undefined || swap === undefined) continue
+    indices[index] = swap
+    indices[swapIndex] = current
+  }
+
+  return indices
 }
 
 interface UsePlaylistOptions {
@@ -77,10 +86,19 @@ export function usePlaylist(options?: UsePlaylistOptions) {
   const onDroppedLocalTracks = options?.onDroppedLocalTracks
   const restoredRef = useRef(readStoredPlaylist())
   const notifiedDropRef = useRef(false)
+  const shuffleBagRef = useRef<number[]>([])
+  const shuffleHistoryRef = useRef<number[]>([])
+  const currentIndexRef = useRef(-1)
   const [tracks, setTracks] = useState<Track[]>(() => restoredRef.current.tracks)
   const [currentIndex, setCurrentIndex] = useState(() => readStoredIndex(restoredRef.current.tracks))
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(readStoredRepeat)
   const [shuffle, setShuffle] = useState(readStoredShuffle)
+  currentIndexRef.current = currentIndex
+
+  const resetShuffleBag = useCallback((length: number, current: number) => {
+    shuffleBagRef.current = shuffledRest(length, current)
+    shuffleHistoryRef.current = current >= 0 ? [current] : []
+  }, [])
 
   useEffect(() => {
     try {
@@ -105,6 +123,17 @@ export function usePlaylist(options?: UsePlaylistOptions) {
       // ignore quota / private mode
     }
   }, [shuffle])
+
+  const playlistIds = tracks.map((track) => track.id).join('\0')
+
+  useEffect(() => {
+    if (!shuffle) {
+      shuffleBagRef.current = []
+      shuffleHistoryRef.current = []
+      return
+    }
+    resetShuffleBag(tracks.length, currentIndexRef.current)
+  }, [playlistIds, resetShuffleBag, shuffle, tracks.length])
 
   const persist = useCallback((next: Track[]) => {
     try {
@@ -166,13 +195,16 @@ export function usePlaylist(options?: UsePlaylistOptions) {
     })
   }, [persist])
 
-  const selectTrack = useCallback((track: Track) => {
+  const selectTrack = useCallback((track: Track, options?: { restartShuffle?: boolean }) => {
     setTracks((prev) => {
       const index = prev.findIndex((item) => item.id === track.id)
-      if (index >= 0) setCurrentIndex(index)
+      if (index >= 0) {
+        setCurrentIndex(index)
+        if (shuffle && options?.restartShuffle) resetShuffleBag(prev.length, index)
+      }
       return prev
     })
-  }, [])
+  }, [resetShuffleBag, shuffle])
 
   const addAndSelect = useCallback((track: Track): AddTrackResult => {
     let result: AddTrackResult = 'exists'
@@ -222,8 +254,23 @@ export function usePlaylist(options?: UsePlaylistOptions) {
   const playNext = useCallback((): Track | null => {
     if (tracks.length === 0) return null
 
-    if (shuffle && tracks.length > 1) {
-      const nextIndex = pickShuffledIndex(tracks.length, currentIndex)
+    if (shuffle) {
+      if (tracks.length === 1) {
+        return repeatMode === 'off' ? null : tracks[0] ?? null
+      }
+
+      shuffleBagRef.current = shuffleBagRef.current.filter(
+        (index) => index !== currentIndex && index >= 0 && index < tracks.length,
+      )
+
+      if (shuffleBagRef.current.length === 0) {
+        if (repeatMode === 'off') return null
+        resetShuffleBag(tracks.length, currentIndex)
+      }
+
+      const nextIndex = shuffleBagRef.current.shift()
+      if (nextIndex === undefined) return null
+      shuffleHistoryRef.current.push(nextIndex)
       setCurrentIndex(nextIndex)
       return tracks[nextIndex] ?? null
     }
@@ -238,10 +285,36 @@ export function usePlaylist(options?: UsePlaylistOptions) {
 
     setCurrentIndex(0)
     return tracks[0] ?? null
-  }, [tracks, currentIndex, shuffle, repeatMode])
+  }, [tracks, currentIndex, shuffle, repeatMode, resetShuffleBag])
 
   const playPrevious = useCallback((): Track | null => {
     if (tracks.length === 0) return null
+
+    if (shuffle) {
+      if (tracks.length === 1) {
+        return repeatMode === 'off' ? null : tracks[0] ?? null
+      }
+
+      if (shuffleHistoryRef.current.length > 1) {
+        const current = shuffleHistoryRef.current.pop()
+        const prevIndex = shuffleHistoryRef.current[shuffleHistoryRef.current.length - 1]
+        if (current !== undefined) shuffleBagRef.current.unshift(current)
+        if (prevIndex === undefined) return null
+        setCurrentIndex(prevIndex)
+        return tracks[prevIndex] ?? null
+      }
+
+      if (repeatMode === 'off') return null
+
+      if (shuffleBagRef.current.length === 0) {
+        resetShuffleBag(tracks.length, currentIndex)
+      }
+      const prevIndex = shuffleBagRef.current.pop()
+      if (prevIndex === undefined) return null
+      shuffleHistoryRef.current.push(prevIndex)
+      setCurrentIndex(prevIndex)
+      return tracks[prevIndex] ?? null
+    }
 
     if (currentIndex > 0) {
       const prevIndex = currentIndex - 1
@@ -254,10 +327,11 @@ export function usePlaylist(options?: UsePlaylistOptions) {
     const lastIndex = tracks.length - 1
     setCurrentIndex(lastIndex)
     return tracks[lastIndex] ?? null
-  }, [tracks, currentIndex, repeatMode])
+  }, [tracks, currentIndex, shuffle, repeatMode, resetShuffleBag])
 
-  const playOnEnded = useCallback((): Track | null => {
+  const playOnEnded = useCallback((endedTrack?: Track | null): Track | null => {
     if (repeatMode === 'one') {
+      if (endedTrack) return endedTrack
       return currentIndex >= 0 ? tracks[currentIndex] ?? null : null
     }
     return playNext()
