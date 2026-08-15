@@ -6,7 +6,7 @@ import { isJamendoConfigured } from '@shared/config'
 import { Button } from '@shared/ui/Button'
 
 interface TrackSearchPanelProps {
-  onPreviewTrack: (track: Track) => void
+  onPlayTrack: (track: Track) => void
   onAddTrack: (track: Track) => void
   onRemoveFromPlaylist: (track: Track) => void
   onAddAll: (tracks: Track[]) => void
@@ -19,7 +19,7 @@ const inputClassName =
   'flex-1 rounded-md border border-sky-400/20 bg-sky-950/40 px-4 py-2.5 font-mono text-sm text-sky-50 outline-none transition placeholder:text-sky-400/35 focus:border-sky-400/50 focus:bg-sky-950/60 focus:ring-2 focus:ring-sky-400/15'
 
 export function TrackSearchPanel({
-  onPreviewTrack,
+  onPlayTrack,
   onAddTrack,
   onRemoveFromPlaylist,
   onAddAll,
@@ -125,7 +125,7 @@ export function TrackSearchPanel({
           <li key={track.id}>
             <TrackItem
               track={track}
-              onPlay={onPreviewTrack}
+              onPlay={onPlayTrack}
               onAdd={onAddTrack}
               onRemoveFromPlaylist={onRemoveFromPlaylist}
               actionLabel="Add"

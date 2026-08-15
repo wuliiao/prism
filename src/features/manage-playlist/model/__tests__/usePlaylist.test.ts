@@ -142,4 +142,36 @@ describe('usePlaylist', () => {
     })
     jest.restoreAllMocks()
   })
+
+  it('stops shuffled playback when every track has played and repeat is off', () => {
+    localStorage.setItem('prism-repeat', 'off')
+    localStorage.setItem('prism-shuffle', 'true')
+    const { result } = renderHook(() => usePlaylist())
+
+    act(() => {
+      result.current.addTracks([mockTrack, mockTrackTwo])
+      result.current.selectTrack(mockTrack)
+    })
+
+    act(() => {
+      expect(result.current.playNext()?.id).toBe(mockTrackTwo.id)
+    })
+    act(() => {
+      expect(result.current.playNext()).toBeNull()
+    })
+  })
+
+  it('replays the ended search track when repeat is one', () => {
+    localStorage.setItem('prism-repeat', 'one')
+    const { result } = renderHook(() => usePlaylist())
+
+    act(() => {
+      result.current.addTracks([mockTrack, mockTrackTwo])
+      result.current.selectTrack(mockTrackTwo)
+    })
+
+    act(() => {
+      expect(result.current.playOnEnded(mockTrack)?.id).toBe(mockTrack.id)
+    })
+  })
 })

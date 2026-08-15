@@ -31,27 +31,16 @@ export function usePlayerPage() {
       showToast('Local files were removed after refresh. Import them again.', 'info'),
   })
 
-  const isPlaylistPlaybackRef = useRef(true)
   const queuedAfterRemoveRef = useRef<Track | null>(null)
+  const currentTrackRef = useRef(currentTrack)
+  currentTrackRef.current = currentTrack
 
   const playTrack = useCallback(
     async (track: Track) => {
-      isPlaylistPlaybackRef.current = true
-      selectTrack(track)
+      selectTrack(track, { restartShuffle: true })
       await loadTrack(track)
     },
     [loadTrack, selectTrack],
-  )
-
-  const previewTrack = useCallback(
-    async (track: Track) => {
-      isPlaylistPlaybackRef.current = isInPlaylist(track.id)
-      if (isInPlaylist(track.id)) {
-        selectTrack(track)
-      }
-      await loadTrack(track)
-    },
-    [isInPlaylist, loadTrack, selectTrack],
   )
 
   const handleAddToPlaylist = useCallback(
@@ -60,7 +49,6 @@ export function usePlayerPage() {
       if (result === 'added') {
         showToast(`Added: ${track.title}`, 'success')
         if (currentTrack?.id === track.id) {
-          isPlaylistPlaybackRef.current = true
           selectTrack(track)
         }
       } else {
@@ -75,12 +63,9 @@ export function usePlayerPage() {
       if (!isInPlaylist(track.id)) return
 
       removeTrack(track.id)
-      if (currentTrack?.id === track.id) {
-        isPlaylistPlaybackRef.current = false
-      }
       showToast(`Removed: ${track.title}`, 'info')
     },
-    [currentTrack?.id, isInPlaylist, removeTrack, showToast],
+    [isInPlaylist, removeTrack, showToast],
   )
 
   const handleAddAll = useCallback(
@@ -98,7 +83,6 @@ export function usePlayerPage() {
   const handleUpload = useCallback(
     async (track: Track) => {
       addAndSelect(track)
-      isPlaylistPlaybackRef.current = true
       await loadTrack(track)
       showToast(`Uploaded: ${track.title}`, 'success')
     },
@@ -118,7 +102,6 @@ export function usePlayerPage() {
         const index = tracks.findIndex((item) => item.id === track.id)
         queuedAfterRemoveRef.current =
           index >= 0 && index < tracks.length - 1 ? tracks[index + 1] ?? null : null
-        isPlaylistPlaybackRef.current = queuedAfterRemoveRef.current !== null
         removeTrack(track.id, { keepPlaying: true })
         return
       }
@@ -129,13 +112,11 @@ export function usePlayerPage() {
   )
 
   const handleNext = useCallback(async () => {
-    isPlaylistPlaybackRef.current = true
     const next = playNext()
     if (next) await loadTrack(next)
   }, [loadTrack, playNext])
 
   const handlePrevious = useCallback(async () => {
-    isPlaylistPlaybackRef.current = true
     const previous = playPrevious()
     if (previous) await loadTrack(previous)
   }, [loadTrack, playPrevious])
@@ -146,15 +127,12 @@ export function usePlayerPage() {
         if (queuedAfterRemoveRef.current) {
           const next = queuedAfterRemoveRef.current
           queuedAfterRemoveRef.current = null
-          isPlaylistPlaybackRef.current = true
           selectTrack(next)
           await loadTrack(next)
           return
         }
 
-        if (!isPlaylistPlaybackRef.current) return
-
-        const next = playOnEnded()
+        const next = playOnEnded(currentTrackRef.current)
         if (next) await loadTrack(next)
       })()
     })
@@ -169,7 +147,6 @@ export function usePlayerPage() {
 
   useEffect(() => {
     if (!currentTrack) return
-    isPlaylistPlaybackRef.current = isInPlaylist(currentTrack.id)
     if (isInPlaylist(currentTrack.id)) {
       selectTrack(currentTrack)
     }
@@ -191,18 +168,15 @@ export function usePlayerPage() {
     enabled: Boolean(currentTrack),
   })
 
-  const isPreviewMode = Boolean(currentTrack && !isInPlaylist(currentTrack.id))
-
   return {
     currentTrack,
     isPlaying,
     isLoading,
     tracks,
     isInPlaylist,
-    canNavigate: tracks.length > 0 && !isPreviewMode,
+    canNavigate: tracks.length > 0,
     coverInPlaylist: Boolean(currentTrack && isInPlaylist(currentTrack.id)),
     playTrack,
-    previewTrack,
     handleAddToPlaylist,
     handleRemoveFromPlaylist,
     handleAddAll,

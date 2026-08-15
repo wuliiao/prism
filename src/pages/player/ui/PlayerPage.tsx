@@ -16,7 +16,6 @@ export function PlayerPage() {
     canNavigate,
     coverInPlaylist,
     playTrack,
-    previewTrack,
     handleAddToPlaylist,
     handleRemoveFromPlaylist,
     handleAddAll,
@@ -130,7 +129,7 @@ export function PlayerPage() {
 
       <div className="grid flex-1 gap-6 lg:grid-cols-2">
         <TrackSearchPanel
-          onPreviewTrack={(track) => void previewTrack(track)}
+          onPlayTrack={(track) => void playTrack(track)}
           onAddTrack={handleAddToPlaylist}
           onRemoveFromPlaylist={handleRemoveFromPlaylist}
           onAddAll={handleAddAll}
