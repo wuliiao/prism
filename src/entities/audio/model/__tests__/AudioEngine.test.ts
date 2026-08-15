@@ -1,9 +1,9 @@
 import { AudioEngine } from '../AudioEngine'
 
 class MockAnalyserNode {
-  fftSize = 512
+  fftSize = 2048
   smoothingTimeConstant = 0
-  frequencyBinCount = 256
+  frequencyBinCount = 1024
   connect = jest.fn()
 }
 
