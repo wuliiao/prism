@@ -7,7 +7,11 @@ interface AudioVisualizerProps {
 
 const HUD_CYAN = 'rgba(56, 189, 248, 0.7)'
 const HUD_GOLD = 'rgba(212, 175, 95, 0.7)'
-const WAVE_POINTS = 96
+const IDLE_POINTS = 160
+const TRIGGER_THRESHOLD = 0.015
+const TRIGGER_LOCK_WINDOW = 48
+const DISPLAY_RATIO = 0.5
+const WAVE_FOLLOW = 0.06
 
 function lerp(current: number, target: number, amount: number) {
   return current + (target - current) * amount
@@ -24,15 +28,70 @@ function averageEnergy(spectrum: Uint8Array) {
   return Math.min(1, (sum / spectrum.length / 255) * 0.7 + (peak / 255) * 0.3)
 }
 
-function bandEnergy(spectrum: Uint8Array, from: number, to: number) {
-  const end = Math.min(to, spectrum.length)
-  const start = Math.min(from, end)
-  if (end <= start) return 0
-  let sum = 0
-  for (let index = start; index < end; index += 1) {
-    sum += spectrum[index] ?? 0
+function waveValue(sample: number) {
+  return Math.tanh(sample)
+}
+
+function peakAbs(samples: Float32Array) {
+  let peak = 0
+  for (const value of samples) {
+    peak = Math.max(peak, Math.abs(value))
   }
-  return sum / ((end - start) * 255)
+  return peak
+}
+
+function restorePeak(samples: Float32Array, targetPeak: number) {
+  const currentPeak = peakAbs(samples)
+  if (currentPeak < 1e-4 || targetPeak < 1e-4) return
+  const gain = targetPeak / currentPeak
+  for (let index = 0; index < samples.length; index += 1) {
+    samples[index] = (samples[index] ?? 0) * gain
+  }
+}
+
+function findRisingTrigger(samples: Float32Array, searchEnd: number, preferredStart: number) {
+  const searchRange = (from: number, to: number) => {
+    for (let index = from; index < to; index += 1) {
+      const previous = samples[index - 1] ?? 0
+      const current = samples[index] ?? 0
+      if (previous < 0 && current >= TRIGGER_THRESHOLD) {
+        return index
+      }
+    }
+    return -1
+  }
+
+  if (preferredStart > 0) {
+    const from = Math.max(1, preferredStart - TRIGGER_LOCK_WINDOW)
+    const to = Math.min(searchEnd, preferredStart + TRIGGER_LOCK_WINDOW)
+    const locked = searchRange(from, to)
+    if (locked >= 0) return locked
+  }
+
+  const next = searchRange(1, searchEnd)
+  if (next >= 0) return next
+  return preferredStart > 0 ? preferredStart : 0
+}
+
+function copyOscilloscopeWindow(
+  source: Float32Array,
+  target: Float32Array,
+  preferredStart: number,
+) {
+  const searchEnd = Math.max(1, source.length - target.length)
+  const start = findRisingTrigger(source, searchEnd, preferredStart)
+  for (let index = 0; index < target.length; index += 1) {
+    target[index] = source[start + index] ?? 0
+  }
+  return start
+}
+
+function fillIdleWave(samples: Float32Array, phase: number) {
+  const last = samples.length - 1
+  for (let index = 0; index <= last; index += 1) {
+    const progress = last === 0 ? 0 : index / last
+    samples[index] = Math.sin(progress * Math.PI * 2.4 + phase) * 0.22
+  }
 }
 
 function drawHudFrame(context: CanvasRenderingContext2D, width: number, height: number) {
@@ -88,45 +147,13 @@ function buildWavePath(
   const last = samples.length - 1
   if (last < 0) return
 
-  const points: Array<{ x: number; y: number }> = []
-  for (let index = 0; index <= last; index += 1) {
-    const progress = last === 0 ? 0 : index / last
-    const value = Math.tanh(samples[index] ?? 0)
-    points.push({ x: progress * width, y: centerY + value * amplitude })
-  }
-
   context.beginPath()
-  const first = points[0]
-  if (!first) return
-  context.moveTo(first.x, first.y)
-
-  for (let index = 1; index < points.length - 1; index += 1) {
-    const current = points[index]
-    const next = points[index + 1]
-    if (!current || !next) continue
-    context.quadraticCurveTo(current.x, current.y, (current.x + next.x) / 2, (current.y + next.y) / 2)
-  }
-
-  const end = points[points.length - 1]
-  if (end) context.lineTo(end.x, end.y)
-}
-
-function fillWave(
-  samples: Float32Array,
-  phase: number,
-  bass: number,
-  mid: number,
-  treble: number,
-  gain: number,
-) {
-  const last = samples.length - 1
   for (let index = 0; index <= last; index += 1) {
     const progress = last === 0 ? 0 : index / last
-    samples[index] =
-      (Math.sin(progress * Math.PI * 2 + phase) * (0.42 + bass * 0.58) +
-        Math.sin(progress * Math.PI * 4 + phase * 1.15) * mid * 0.32 +
-        Math.sin(progress * Math.PI * 7 + phase * 1.4) * treble * 0.16) *
-      gain
+    const x = progress * width
+    const y = centerY + waveValue(samples[index] ?? 0) * amplitude
+    if (index === 0) context.moveTo(x, y)
+    else context.lineTo(x, y)
   }
 }
 
@@ -137,10 +164,6 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
   const animationRef = useRef<number | null>(null)
   const phaseRef = useRef(0)
   const energyRef = useRef(0)
-  const bassRef = useRef(0)
-  const midRef = useRef(0)
-  const trebleRef = useRef(0)
-  const lastLiveWaveformRef = useRef<Float32Array | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -150,12 +173,13 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
     if (!context) return
 
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const spectrum = new Uint8Array(analyser?.frequencyBinCount ?? 128)
-    const liveWave = new Float32Array(WAVE_POINTS)
-    const idleWave = new Float32Array(WAVE_POINTS)
-    if (lastLiveWaveformRef.current && lastLiveWaveformRef.current.length === WAVE_POINTS) {
-      liveWave.set(lastLiveWaveformRef.current)
-    }
+    const fftSize = analyser?.fftSize ?? 2048
+    const timeDomain = new Float32Array(fftSize)
+    const spectrum = new Uint8Array(analyser?.frequencyBinCount ?? fftSize / 2)
+    const liveWave = new Float32Array(Math.max(2, Math.floor(fftSize * DISPLAY_RATIO)))
+    const capturedWave = new Float32Array(liveWave.length)
+    const idleWave = new Float32Array(IDLE_POINTS)
+    let triggerStart = 0
 
     const drawFrame = (animateIdle: boolean) => {
       const { width, height: canvasHeight, dpr } = sizeRef.current
@@ -163,41 +187,24 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
 
       const centerY = canvasHeight / 2
       const hasLiveAudio = Boolean(analyser && isPlaying)
-      const frozenWaveform = lastLiveWaveformRef.current
-      const hasFrozenWave = Boolean(currentTrack && frozenWaveform && frozenWaveform.length > 0)
 
       if (hasLiveAudio) {
+        analyser!.getFloatTimeDomainData(timeDomain)
         analyser!.getByteFrequencyData(spectrum)
-        bassRef.current = lerp(bassRef.current, bandEnergy(spectrum, 0, 10), 0.1)
-        midRef.current = lerp(midRef.current, bandEnergy(spectrum, 10, 48), 0.08)
-        trebleRef.current = lerp(trebleRef.current, bandEnergy(spectrum, 48, 140), 0.06)
-        energyRef.current = lerp(energyRef.current, averageEnergy(spectrum), 0.1)
-        phaseRef.current += 0.028 + bassRef.current * 0.03
-        fillWave(
-          liveWave,
-          phaseRef.current,
-          bassRef.current,
-          midRef.current,
-          trebleRef.current,
-          0.85 + energyRef.current * 0.2,
-        )
-        if (!lastLiveWaveformRef.current || lastLiveWaveformRef.current.length !== WAVE_POINTS) {
-          lastLiveWaveformRef.current = new Float32Array(WAVE_POINTS)
+        triggerStart = copyOscilloscopeWindow(timeDomain, capturedWave, triggerStart)
+        for (let index = 0; index < liveWave.length; index += 1) {
+          liveWave[index] = lerp(liveWave[index] ?? 0, capturedWave[index] ?? 0, WAVE_FOLLOW)
         }
-        lastLiveWaveformRef.current.set(liveWave)
-      } else if (hasFrozenWave) {
-        energyRef.current = lerp(energyRef.current, 0.08, 0.12)
+        restorePeak(liveWave, peakAbs(capturedWave))
+        energyRef.current = lerp(energyRef.current, averageEnergy(spectrum), 0.18)
       } else {
-        lastLiveWaveformRef.current = null
         energyRef.current = lerp(energyRef.current, 0.12, 0.08)
         if (animateIdle) phaseRef.current += 0.018
-        fillWave(idleWave, phaseRef.current, 0.18, 0.08, 0.04, 0.22)
+        fillIdleWave(idleWave, phaseRef.current)
       }
 
       const energy = energyRef.current
-      const showLiveWave = hasLiveAudio || hasFrozenWave
-      const amplitude = canvasHeight * (showLiveWave ? 0.28 + energy * 0.12 : 0.22)
-      const liveSamples = hasLiveAudio ? liveWave : frozenWaveform
+      const amplitude = canvasHeight * (hasLiveAudio ? 0.76 : 0.22)
 
       context.setTransform(1, 0, 0, 1, 0, 0)
       context.clearRect(0, 0, canvas.width, canvas.height)
@@ -222,27 +229,23 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
       context.lineCap = 'round'
       context.lineJoin = 'round'
 
-      if (showLiveWave && liveSamples) {
-        context.strokeStyle = `rgba(212, 175, 95, ${hasLiveAudio ? 0.28 : 0.16})`
+      if (hasLiveAudio) {
+        context.strokeStyle = 'rgba(212, 175, 95, 0.28)'
         context.lineWidth = 1
-        buildWavePath(context, liveSamples, width, centerY + 6, amplitude * 0.55)
+        buildWavePath(context, liveWave, width, centerY + 6, amplitude * 0.55)
         context.stroke()
       }
 
-      context.strokeStyle = showLiveWave
-        ? `rgba(56, 189, 248, ${hasLiveAudio ? 0.55 + energy * 0.35 : 0.38})`
+      context.strokeStyle = hasLiveAudio
+        ? `rgba(56, 189, 248, ${0.55 + energy * 0.35})`
         : 'rgba(56, 189, 248, 0.35)'
-      context.lineWidth = showLiveWave ? 2 : 1.25
-      if (showLiveWave && liveSamples) {
-        buildWavePath(context, liveSamples, width, centerY, amplitude)
-      } else {
-        buildWavePath(context, idleWave, width, centerY, amplitude)
-      }
+      context.lineWidth = hasLiveAudio ? 2 : 1.25
+      buildWavePath(context, hasLiveAudio ? liveWave : idleWave, width, centerY, amplitude)
       context.stroke()
     }
 
     const draw = () => {
-      const keepAnimating = !mediaQuery.matches && (Boolean(analyser && isPlaying) || !currentTrack)
+      const keepAnimating = !mediaQuery.matches
       drawFrame(keepAnimating)
       if (keepAnimating) {
         animationRef.current = requestAnimationFrame(draw)
@@ -266,7 +269,7 @@ export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [analyser, currentTrack, isPlaying])
+  }, [analyser, isPlaying])
 
   useEffect(() => {
     const canvas = canvasRef.current

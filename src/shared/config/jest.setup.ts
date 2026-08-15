@@ -19,11 +19,12 @@ Object.defineProperty(HTMLMediaElement.prototype, 'load', {
 })
 
 class MockAnalyserNode {
-  fftSize = 512
-  frequencyBinCount = 256
+  fftSize = 2048
+  frequencyBinCount = 1024
   smoothingTimeConstant = 0
   connect = jest.fn()
   getByteTimeDomainData = jest.fn()
+  getFloatTimeDomainData = jest.fn()
   getByteFrequencyData = jest.fn()
 }
 
