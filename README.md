@@ -6,16 +6,19 @@
 
 - Load royalty-free tracks from Jamendo by title, artist, or mood
 - Upload local audio files
-- Real-time frequency visualizer on Canvas (Web Audio API)
+- One playback session for Search and Playlist: next/previous, shuffle, and repeat follow the current track
+- Real-time oscillogram on Canvas from time-domain PCM (Web Audio `AnalyserNode`)
 - Playlist management with `localStorage` persistence
-- Custom playback controls: play/pause, seek, volume, next/previous
+- Playback controls: play/pause, seek, volume, mute, next/previous, shuffle, repeat (off / all / one)
+- Restore the current track after refresh
+- Keyboard shortcuts: Space, arrows, Shift+arrows, M
 
 ## Stack
 
 - **React 19** + **TypeScript**
 - **Vite** — bundler
 - **Tailwind CSS v4**
-- **Web Audio API** — analyser + canvas visualizer
+- **Web Audio API** — analyser + canvas oscillogram
 - **Jamendo API** — free music catalog
 - **Storybook** — component docs
 - **Jest + React Testing Library** — unit tests
@@ -51,7 +54,7 @@ pnpm install
 3. Set your client ID:
 
 ```env
-VITE_JAMENDO_CLIENT_ID=your_client_id
+VITE_JAMENDO_CLIENT_ID=your_jamendo_client_id
 ```
 
 ### 3. Run dev server
@@ -70,7 +73,9 @@ Open [http://localhost:5173](http://localhost:5173)
 | `pnpm build` | Production build |
 | `pnpm preview` | Preview production build |
 | `pnpm test` | Run Jest unit tests |
+| `pnpm test:watch` | Jest in watch mode |
 | `pnpm storybook` | Start Storybook on port 6006 |
+| `pnpm build-storybook` | Build static Storybook |
 | `pnpm lint` | ESLint |
 
 ## Docker
@@ -80,6 +85,8 @@ Development:
 ```bash
 docker compose up --build
 ```
+
+App will be available at [http://localhost:5173](http://localhost:5173)
 
 Production (nginx):
 
@@ -138,4 +145,4 @@ pnpm storybook
 pnpm test
 ```
 
-Tests cover time formatting, track mappers, playlist hook, `SeekBar`, `TrackItem`, playback storage, Jamendo search, `AudioEngine`, `loadTrack`, and restoring the current track after refresh.
+Tests cover time formatting, keyboard shortcuts, track mappers, playlist hook (including shuffle/repeat), Jamendo search and cache, `SeekBar`, `TrackItem`, playback storage, `AudioEngine`, `useAudioEngine`, and restoring the current track after refresh.
