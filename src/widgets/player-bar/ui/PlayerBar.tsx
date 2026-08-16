@@ -9,11 +9,9 @@ import {
   IconShuffle,
   IconSkipBack,
   IconSkipForward,
-  IconVolume,
-  IconVolumeMuted,
 } from '@shared/ui/Icon'
-import { Slider } from '@shared/ui/Slider'
 import { Button } from '@shared/ui/Button'
+import { VolumeControl } from './VolumeControl'
 
 interface PlayerBarProps {
   canNavigate: boolean
@@ -40,20 +38,7 @@ export function PlayerBar({
   onToggleShuffle,
   onCycleRepeat,
 }: PlayerBarProps) {
-  const { currentTrack, volume, setVolume, toggleMute } = useAudioEngine()
-
-  const volumeSlider = (
-    <Slider
-      showLabel={false}
-      aria-label="Volume"
-      min={0}
-      max={1}
-      step={0.01}
-      value={volume}
-      onChange={(event) => setVolume(Number(event.target.value))}
-      className="w-full md:w-28"
-    />
-  )
+  const { currentTrack } = useAudioEngine()
 
   return (
     <footer className="glass-panel-strong fixed inset-x-0 bottom-0 z-50 border-t border-sky-400/20 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -121,32 +106,14 @@ export function PlayerBar({
           </div>
 
           <div className="hidden min-w-0 flex-1 items-center justify-end gap-1 md:flex">
-            <Button
-              variant="icon"
-              aria-label={volume === 0 ? 'Unmute' : 'Mute'}
-              aria-pressed={volume === 0}
-              className="h-8 w-8"
-              onClick={toggleMute}
-            >
-              {volume === 0 ? <IconVolumeMuted className="h-4 w-4" /> : <IconVolume className="h-4 w-4" />}
-            </Button>
-            {volumeSlider}
+            <VolumeControl />
           </div>
         </div>
 
         <div className="mt-2 space-y-2 sm:hidden">
           <SeekBar />
           <div className="flex items-center gap-1">
-            <Button
-              variant="icon"
-              aria-label={volume === 0 ? 'Unmute' : 'Mute'}
-              aria-pressed={volume === 0}
-              className="h-8 w-8"
-              onClick={toggleMute}
-            >
-              {volume === 0 ? <IconVolumeMuted className="h-4 w-4" /> : <IconVolume className="h-4 w-4" />}
-            </Button>
-            {volumeSlider}
+            <VolumeControl />
           </div>
         </div>
       </div>
