@@ -11,6 +11,7 @@ import {
 import { AudioEngine } from './AudioEngine'
 import type { PlayingMedia } from './types'
 import { readStoredPlayback, writeStoredPlayback } from './playbackStorage'
+import { readStoredVolume, writeStoredVolume } from './volumeStorage'
 
 interface LoadTrackOptions {
   autoplay?: boolean
@@ -38,19 +39,6 @@ interface AudioEngineContextValue {
 }
 
 const AudioEngineContext = createContext<AudioEngineContextValue | null>(null)
-
-const VOLUME_STORAGE_KEY = 'prism-volume'
-
-function readStoredVolume(): number {
-  try {
-    const raw = localStorage.getItem(VOLUME_STORAGE_KEY)
-    if (!raw) return 0.8
-    const value = Number(raw)
-    return Number.isFinite(value) && value >= 0 && value <= 1 ? value : 0.8
-  } catch {
-    return 0.8
-  }
-}
 
 export function AudioEngineProvider({ children }: { children: ReactNode }) {
   const engineRef = useRef<AudioEngine | null>(null)
@@ -221,11 +209,7 @@ export function AudioEngineProvider({ children }: { children: ReactNode }) {
     engineRef.current?.setVolume(next)
     setVolumeState(next)
     if (next > 0) lastAudibleVolumeRef.current = next
-    try {
-      localStorage.setItem(VOLUME_STORAGE_KEY, String(next))
-    } catch {
-      // ignore storage failures for volume
-    }
+    writeStoredVolume(next)
   }, [])
 
   const toggleMute = useCallback(() => {

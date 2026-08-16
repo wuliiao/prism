@@ -1,160 +1,20 @@
 import { useEffect, useRef } from 'react'
 import { useAudioEngine } from '@entities/audio'
+import { buildWavePath, drawHudFrame, drawHudLabels } from '../lib/draw'
+import {
+  DISPLAY_RATIO,
+  IDLE_POINTS,
+  WAVE_FOLLOW,
+  averageEnergy,
+  copyOscilloscopeWindow,
+  fillIdleWave,
+  lerp,
+  peakAbs,
+  restorePeak,
+} from '../lib/oscilloscope'
 
 interface AudioVisualizerProps {
   height?: number
-}
-
-const HUD_CYAN = 'rgba(56, 189, 248, 0.7)'
-const HUD_GOLD = 'rgba(212, 175, 95, 0.7)'
-const IDLE_POINTS = 160
-const TRIGGER_THRESHOLD = 0.015
-const TRIGGER_LOCK_WINDOW = 48
-const DISPLAY_RATIO = 0.5
-const WAVE_FOLLOW = 0.06
-
-function lerp(current: number, target: number, amount: number) {
-  return current + (target - current) * amount
-}
-
-function averageEnergy(spectrum: Uint8Array) {
-  if (spectrum.length === 0) return 0
-  let sum = 0
-  let peak = 0
-  for (const value of spectrum) {
-    sum += value
-    peak = Math.max(peak, value)
-  }
-  return Math.min(1, (sum / spectrum.length / 255) * 0.7 + (peak / 255) * 0.3)
-}
-
-function waveValue(sample: number) {
-  return Math.tanh(sample)
-}
-
-function peakAbs(samples: Float32Array) {
-  let peak = 0
-  for (const value of samples) {
-    peak = Math.max(peak, Math.abs(value))
-  }
-  return peak
-}
-
-function restorePeak(samples: Float32Array, targetPeak: number) {
-  const currentPeak = peakAbs(samples)
-  if (currentPeak < 1e-4 || targetPeak < 1e-4) return
-  const gain = targetPeak / currentPeak
-  for (let index = 0; index < samples.length; index += 1) {
-    samples[index] = (samples[index] ?? 0) * gain
-  }
-}
-
-function findRisingTrigger(samples: Float32Array, searchEnd: number, preferredStart: number) {
-  const searchRange = (from: number, to: number) => {
-    for (let index = from; index < to; index += 1) {
-      const previous = samples[index - 1] ?? 0
-      const current = samples[index] ?? 0
-      if (previous < 0 && current >= TRIGGER_THRESHOLD) {
-        return index
-      }
-    }
-    return -1
-  }
-
-  if (preferredStart > 0) {
-    const from = Math.max(1, preferredStart - TRIGGER_LOCK_WINDOW)
-    const to = Math.min(searchEnd, preferredStart + TRIGGER_LOCK_WINDOW)
-    const locked = searchRange(from, to)
-    if (locked >= 0) return locked
-  }
-
-  const next = searchRange(1, searchEnd)
-  if (next >= 0) return next
-  return preferredStart > 0 ? preferredStart : 0
-}
-
-function copyOscilloscopeWindow(
-  source: Float32Array,
-  target: Float32Array,
-  preferredStart: number,
-) {
-  const searchEnd = Math.max(1, source.length - target.length)
-  const start = findRisingTrigger(source, searchEnd, preferredStart)
-  for (let index = 0; index < target.length; index += 1) {
-    target[index] = source[start + index] ?? 0
-  }
-  return start
-}
-
-function fillIdleWave(samples: Float32Array, phase: number) {
-  const last = samples.length - 1
-  for (let index = 0; index <= last; index += 1) {
-    const progress = last === 0 ? 0 : index / last
-    samples[index] = Math.sin(progress * Math.PI * 2.4 + phase) * 0.22
-  }
-}
-
-function drawHudFrame(context: CanvasRenderingContext2D, width: number, height: number) {
-  const pad = 14
-  const corner = 22
-  context.strokeStyle = 'rgba(56, 189, 248, 0.35)'
-  context.lineWidth = 1
-
-  const corners: Array<[number, number, number, number]> = [
-    [pad, pad, 1, 1],
-    [width - pad, pad, -1, 1],
-    [pad, height - pad, 1, -1],
-    [width - pad, height - pad, -1, -1],
-  ]
-
-  corners.forEach(([x, y, dirX, dirY]) => {
-    context.beginPath()
-    context.moveTo(x + dirX * corner, y)
-    context.lineTo(x, y)
-    context.lineTo(x, y + dirY * corner)
-    context.stroke()
-  })
-}
-
-function drawHudLabels(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  energy: number,
-  isLive: boolean,
-) {
-  context.font = '600 9px ui-monospace, monospace'
-  context.fillStyle = HUD_CYAN
-  context.fillText('PRISM // AUDIO.SYS', 18, 22)
-
-  context.font = '9px ui-monospace, monospace'
-  context.fillStyle = HUD_GOLD
-  context.fillText(isLive ? 'STREAM: ACTIVE' : 'STREAM: STANDBY', 18, height - 14)
-
-  context.textAlign = 'right'
-  context.fillStyle = 'rgba(56, 189, 248, 0.45)'
-  context.fillText(`AMP ${Math.round(energy * 100)}%`, width - 18, 22)
-  context.textAlign = 'left'
-}
-
-function buildWavePath(
-  context: CanvasRenderingContext2D,
-  samples: Float32Array,
-  width: number,
-  centerY: number,
-  amplitude: number,
-) {
-  const last = samples.length - 1
-  if (last < 0) return
-
-  context.beginPath()
-  for (let index = 0; index <= last; index += 1) {
-    const progress = last === 0 ? 0 : index / last
-    const x = progress * width
-    const y = centerY + waveValue(samples[index] ?? 0) * amplitude
-    if (index === 0) context.moveTo(x, y)
-    else context.lineTo(x, y)
-  }
 }
 
 export function AudioVisualizer({ height = 240 }: AudioVisualizerProps) {
